@@ -1,0 +1,9 @@
+{
+  "data_max_length": 4096,
+  "server_host": "",
+  "ports": [
+    null,
+    null
+  ],
+  "file_log": false
+}

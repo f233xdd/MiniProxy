@@ -1,0 +1,13 @@
+{
+  "host": {
+    "data_max_length": 4096,
+    "server_address": "x.x.x.x:x",
+    "debug": false
+  },
+  "visitor": {
+    "data_max_length": 4096,
+    "server_address": "x.x.x.x:x",
+    "virtual_open_port": 25565,
+    "debug": false
+  }
+}
