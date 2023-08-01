@@ -1,4 +1,4 @@
-# NAT-T for two
+# NAT-T for two(on-line mc)
 
 ### Usage:
 > for a server, run **main.py** in **server** directory<br>
