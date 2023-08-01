@@ -1,6 +1,6 @@
 {
   "data_max_length": 4096,
-  "server_host": "",
+  "server_host": "x.x.x.x",
   "ports": [
     null,
     null
