@@ -11,14 +11,14 @@ import queue_ex
 #  log config
 file_log = True
 
-_format_msg = "%(levelname)s %(asctime)s %(ip)s %(funcName)s %(message)s"
+_format_msg = "[%(levelname)s] [%(asctime)s] [%(ip)s] [%(funcName)s] %(message)s"
 _format_time = "%H:%M:%S"
 
 _formatter = logging.Formatter(_format_msg, _format_time)
 
 _file_handler = logging.FileHandler("ServerLog.log", mode='a', encoding='utf-8')
 _file_handler.setFormatter(_formatter)
-_file_handler.setLevel(logging.NOTSET)
+_file_handler.setLevel(logging.DEBUG)
 
 _console_handler = logging.StreamHandler(sys.stdout)
 _console_handler.setFormatter(_formatter)
@@ -51,7 +51,7 @@ class Server(object):
         self._port = port  # work as port and a queue flag
         self._cache: bytes | None = None  # store data which is not sent
 
-        self._queue.add_sign(port)
+        self._queue.add_flag(port)
 
         self._data_queue = queue.Queue()
 
@@ -66,7 +66,7 @@ class Server(object):
         self._server_port = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_port.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._server_port.bind((host, port))
-        self._server_port.listen(2)
+        self._server_port.listen(1)
 
     def __link_to_client(self):
         """connect to the client"""
@@ -76,14 +76,14 @@ class Server(object):
 
             _log.info(f"Accept client. Address: {addr}", extra=self._ip)
             try:
-                client.sendall(f"Welcome to the server!\nAddress: {addr}\n".encode('utf_8'))
+                client.sendall(f"Welcome to the server!\nYour address: {addr}\n".encode('utf_8'))
                 break
 
             except ConnectionResetError:
                 _log.warning("[ConnectionResetError] Connection break.", extra=self._ip)
 
-        self._client = client
-        self._client_addr = addr
+        self._client: socket.socket = client
+        self._client_addr: str = addr
 
         self._queue.put(self._client, self._port)
 
@@ -166,7 +166,7 @@ class Server(object):
                 time.sleep(0.001)
 
     def check_client_alive(self):
-        """when both sides stop sending data and revceiving data, it'll work"""
+        """when both sides stop sending data and receiving data, it'll work"""
         while True:
             if self._data_queue.empty() and (self._get_func_alive or self._send_func_alive):
                 time.sleep(5)
@@ -174,7 +174,7 @@ class Server(object):
                 if self._data_queue.empty() and (self._get_func_alive or self._send_func_alive):
                     try:
                         self._to_client.sendall(b"TEST")
-                        # what it sent is not necessary, we aim at ckecking whether client is still alive
+                        # what it sent is not necessary, we aim at checking whether client is still alive
 
                     except (ConnectionResetError, BrokenPipeError) as error:
                         _log.error(error, extra=self._ip)

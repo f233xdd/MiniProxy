@@ -1,3 +1,4 @@
+# the part which connected with a server
 import queue
 import socket
 

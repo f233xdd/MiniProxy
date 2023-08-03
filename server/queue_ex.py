@@ -1,61 +1,75 @@
 import queue
 import logging
+import sys
 
-format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
-format_time = "%H:%M:%S"
-formatter = logging.Formatter(format_msg, format_time)
+_format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
+_format_time = "%H:%M:%S"
+_formatter = logging.Formatter(_format_msg, _format_time)
 
-file_handler = logging.FileHandler("queue.log", mode='w', encoding='utf-8')
-file_handler.setFormatter(formatter)
-file_handler.setLevel(logging.ERROR)
+_console = logging.StreamHandler(sys.stdout)
+_console.setFormatter(_formatter)
+_console.setLevel(logging.ERROR)
 
-log = logging.getLogger("QueueLog")
-log.addHandler(file_handler)
+_log = logging.getLogger("QueueLog")
+_log.addHandler(_console)
+_log.setLevel(logging.ERROR)
 
 
 class DoubleQueue(object):
-    """It provide a exchange queue, suit for 2."""
+    """It provide a exchange queue, suit for two."""
 
     def __init__(self):
         self._queue_1 = queue.Queue()
         self._queue_2 = queue.Queue()
 
-        self._sign_1: int | None = None
-        self._sign_2: int | None = None
+        self._flag_1: int | None = None
+        self._flag_2: int | None = None
 
-    def add_sign(self, sign: int):
-        if self._sign_1 is None:
-            self._sign_1 = sign
+    def add_flag(self, flag: int):
+        if self._flag_1 is None:
+            self._flag_1 = flag
 
-        elif self._sign_2 is None:
-            self._sign_2 = sign
+        elif self._flag_2 is None:
+            self._flag_2 = flag
 
         else:
-            log.error("MemoryError: Got more than two signs.")
+            _log.error("MemoryError: Got more than two flags.")
 
-    def put(self, data, sign: int, block=True, timeout=None):
-        if sign == self._sign_1:
+    def put(self, data, flag: int, block: bool = True, timeout: float | None = None):
+        if flag == self._flag_1:
             self._queue_1.put(data, block=block, timeout=timeout)
 
-        elif sign == self._sign_2:
+        elif flag == self._flag_2:
             self._queue_2.put(data, block=block, timeout=timeout)
 
         else:
-            log.error("ValueError: Sign number is not correct.")
-            log.debug(f"_sign_1: {self._sign_1}, _sign_2: {self._sign_2}, input_sign: {sign}.")
+            _log.error("ValueError: flag number is not correct.")
+            _log.debug(f"_sign_1: {self._flag_1}, _sign_2: {self._flag_2}, input_sign: {flag}.")
 
-    def get(self, sign: int, block=True, timeout=None):
-        if sign == self._sign_1:
+    def get(self, flag: int, block: bool = True, timeout: float | None = None):
+        if flag == self._flag_1:
             return self._queue_2.get(block=block, timeout=timeout)
 
-        elif sign == self._sign_2:
+        elif flag == self._flag_2:
             return self._queue_1.get(block=block, timeout=timeout)
 
         else:
-            log.error("ValueError: Sign number is not correct.")
-            log.debug(f"_sign_1: {self._sign_1}, _sign_2: {self._sign_2}, input_sign: {sign}.")
+            _log.error("ValueError: flag number is not correct.")
+            _log.debug(f"_sign_1: {self._flag_1}, _sign_2: {self._flag_2}, input_sign: {flag}.")
+
+    def empty(self, flag):
+        if flag == self._flag_1:
+            return self._queue_2.empty()
+
+        elif flag == self._flag_2:
+            return self._queue_1.empty()
+
+        else:
+            _log.error("ValueError: Flag number is not correct.")
+            _log.debug(f"_flag_1: {self._flag_1}, _flag_2: {self._flag_2}, input_flag: {flag}.")
 
 
+#  ready to test
 class UmbrellaQueue(object):
     """It provide a exchange queue, suit for 3 or more."""
 

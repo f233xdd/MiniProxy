@@ -1,1 +1,4 @@
 .idea/
+./client/conversations
+./client/test_client
+.__pycache

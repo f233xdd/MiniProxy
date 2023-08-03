@@ -1,11 +1,11 @@
-# host client
+# run this file to start host client
 import threading
 import json
 
-import host
+import host_client
 import client
 
-server_addr: tuple[str, int]
+server_addr: tuple[str, int] = ('', -1)
 
 
 def init():
@@ -18,25 +18,20 @@ def init():
     client.MAX_LENGTH = host_config["data_max_length"]
     addr = host_config["server_address"].split(':')
     server_addr = addr[0], int(addr[1])
-    host.debug = host_config["debug"]
+    host_client.debug = host_config["debug"]
 
 
 def main():
     init()
 
-    open_port = int(input("Mc local port: "))
-    mc_port = host.HostClient(server_addr, open_port)
+    mc_open_port = int(input("Mc local port: "))
+    host = host_client.HostClient(server_addr, mc_open_port)
 
-    functions1 = (mc_port.send_data, mc_port.get_data)
-    functions2 = (mc_port.get_local_data, mc_port.send_java_data)
+    functions = (host.send_data, host.get_data, host.get_local_data, host.send_java_data)
 
-    threads1 = [threading.Thread(target=func) for func in functions1]
-    threads2 = [threading.Thread(target=func) for func in functions2]
+    threads = [threading.Thread(target=func) for func in functions]
 
-    for thread in threads1:
-        thread.start()
-
-    for thread in threads2:
+    for thread in threads:
         thread.start()
 
 
