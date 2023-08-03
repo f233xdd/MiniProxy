@@ -2,7 +2,6 @@ import socket
 
 import client
 
-
 debug = False
 
 
