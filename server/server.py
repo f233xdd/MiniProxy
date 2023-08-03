@@ -48,8 +48,8 @@ class Server(object):
         # TODO: In the future we'll add the function about the arg 'mode'
 
         self._ip = {'ip': f"{host}:{port}"}
-        self._port = port  # work as port and a queue flag
-        self._cache: bytes | None = None  # store data which is not sent
+        self._port = port  # work as a port and a queue flag
+        self._cache: bytes | None = None  # store data which is not sent yet
 
         self._queue.add_flag(port)
 
@@ -165,6 +165,7 @@ class Server(object):
             while self._get_func_alive and self._send_func_alive:
                 time.sleep(0.001)
 
+    # TODO: Dose it work properly?
     def check_client_alive(self):
         """when both sides stop sending data and receiving data, it'll work"""
         while True:
