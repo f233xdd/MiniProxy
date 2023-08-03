@@ -27,7 +27,7 @@ def main():
     mc_open_port = int(input("Mc local port: "))
     host = host_client.HostClient(server_addr, mc_open_port)
 
-    functions = (host.send_data, host.get_data, host.get_local_data, host.send_java_data)
+    functions = [host.send_data, host.get_data, host.virtual_client_main]
 
     threads = [threading.Thread(target=func) for func in functions]
 

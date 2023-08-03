@@ -28,7 +28,7 @@ def main():
 
     visitor = visitor_client.VisitClient(server_addr, virtual_port)
 
-    functions = (visitor.send_data, visitor.get_data, visitor.get_local_data, visitor.send_java_data)
+    functions = [visitor.send_data, visitor.get_data, visitor.virtual_server_main]
 
     threads = [threading.Thread(target=func) for func in functions]
 
