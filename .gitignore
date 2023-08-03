@@ -2,4 +2,5 @@
 ./client/conversations/
 ./client/test_client/
 ./client/virtual_mc/
-.__pycache__/
+*.pyc
+*.pyi
