@@ -1,4 +1,5 @@
-.idea/
+.idea
 ./client/conversations
 ./client/test_client
-.__pycache
+./client/virtual_mc
+.__pycache__
