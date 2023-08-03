@@ -174,7 +174,7 @@ class Server(object):
 
                 if self._data_queue.empty() and (self._get_func_alive or self._send_func_alive):
                     try:
-                        self._to_client.sendall(b"TEST")
+                        self._to_client.send(b"TEST")
                         # what it sent is not necessary, we aim at checking whether client is still alive
 
                     except (ConnectionResetError, BrokenPipeError) as error:
@@ -182,6 +182,7 @@ class Server(object):
                         #  then we'll stop functions which use the client
                         self._to_client.settimeout(1)  # Stop another get_func
                         self._data_queue.put(RuntimeError)  # Stop this send_func
+                        time.sleep(1)
                         self._to_client.settimeout(None)
 
             time.sleep(5)
