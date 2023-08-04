@@ -7,23 +7,6 @@ import client
 
 debug: bool = False
 
-_current_time = 0
-
-
-def ticker(time_break: float) -> bool:
-    global _current_time
-
-    if _current_time == 0:
-        _current_time = time.time()
-        return False
-    else:
-        current_time_break = time.time() - _current_time
-        if current_time_break >= time_break:
-            _current_time = time.time()
-            return True
-        else:
-            return False
-
 
 class VisitClient(client.Client):
 
@@ -68,7 +51,7 @@ class VisitClient(client.Client):
                         self._send_func_alive = False
                         break
                     else:
-                        if ticker(5):
+                        if client.ticker(5):
                             self._mc_client.send(b'')
                         continue
 
