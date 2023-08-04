@@ -47,7 +47,7 @@ class Client(object):
         """get data from server"""
         while True:
             data = self._server.recv(MAX_LENGTH)
-            if data == b"TEST":
+            if data == b'\x00':
                 continue
             self._data_queue_2.put(data)
 

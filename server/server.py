@@ -174,7 +174,8 @@ class Server(object):
 
                 if self._data_queue.empty() and (self._get_func_alive or self._send_func_alive):
                     try:
-                        self._to_client.send(b"TEST")
+                        if hasattr(self._to_client, "send"):
+                            self._to_client.send(b'\x00')
                         # what it sent is not necessary, we aim at checking whether client is still alive
 
                     except (ConnectionResetError, BrokenPipeError) as error:

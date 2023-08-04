@@ -52,7 +52,7 @@ class VisitClient(client.Client):
                         break
                     else:
                         if client.ticker(5):
-                            self._mc_client.send(b'')
+                            self._mc_client.send(b'\x00')
                         continue
 
                 if not self._get_func_alive:
