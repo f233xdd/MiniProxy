@@ -14,8 +14,8 @@ class HostClient(client.Client):
 
         self._me_port = mc_port
         self._virtual_client: socket.socket
-        self.__send_func_alive = False
-        self.__get_func_alive = False
+        self._send_func_alive = False
+        self._get_func_alive = False
 
     def __connect_mc_server(self):
         self._virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,14 +27,14 @@ class HostClient(client.Client):
 
     def __send_java_data(self):
         """send data to java"""
-        self.__send_func_alive = True
+        self._send_func_alive = True
         try:
             while True:
                 try:
                     data = self._data_queue_2.get(timeout=2)
                 except TimeoutError:
                     if not self.__get_func_alive:
-                        self.__send_func_alive = False
+                        self._send_func_alive = False
                         break
                     else:
                         if client.ticker(5):
@@ -42,7 +42,7 @@ class HostClient(client.Client):
                         continue
 
                 if not self.__get_func_alive:
-                    self.__send_func_alive = False
+                    self._send_func_alive = False
                     break
 
                 self._virtual_client.sendall(data)
@@ -51,7 +51,7 @@ class HostClient(client.Client):
                         print("[H]send_java_data: ", data)
         except ConnectionError as error:
             print(f"Error: {error} from send_java_data")
-            self.__send_func_alive = False
+            self._send_func_alive = False
 
     def __get_local_data(self):
         """get data from java"""
@@ -61,13 +61,13 @@ class HostClient(client.Client):
                 try:
                     data = self._virtual_client.recv(client.MAX_LENGTH)
                 except TimeoutError:
-                    if not self.__send_func_alive:
+                    if not self._send_func_alive:
                         self.__get_func_alive = False
                         break
                     else:
                         continue
 
-                if not self.__send_func_alive:
+                if not self._send_func_alive:
                     self.__get_func_alive = False
                     break
 

@@ -1,7 +1,6 @@
 # the part which connected with Minecraft
 import socket
 import threading
-import time
 
 import client
 
