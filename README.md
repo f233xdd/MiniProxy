@@ -3,15 +3,15 @@
 ### Usage:
 
 > for a server:
-> * all you need is in the **server** directory
-> * complete **config.json**
-> * run **main.py**
+> * all you need is in the **server** directory.
+> * complete **config.json**.
+> * run **main.py**.
 >
 > for a client:
-> * all you need is in the **client** directory
-> * complete **config.json**
-> * run **host_main.py** if you are a host
-> * run **visitor.py** if you are a visitor
+> * all you need is in the **client** directory.
+> * complete **config.json**.
+> * run **host_main.py** if you are a host.
+> * run **visitor.py** if you are a visitor.
 
 #### Tips:
 
