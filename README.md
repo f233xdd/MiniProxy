@@ -15,6 +15,6 @@
 
 #### Tips:
 
-_There is one bad thing I need to tell you, which is that this project has not done yet._<br>
-_Therefore, it might have **~~a few~~** bugs to fix._<br>
-_But don't worry. I, the developer will fix them soon(if I have time)._
+> _There is one bad thing I need to tell you, which is that this project has not done yet._<br>
+> _Therefore, it might have **~~a few~~** bugs to fix._<br>
+> _But don't worry. I, the developer will fix them soon(if I have time)._
