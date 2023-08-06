@@ -121,6 +121,7 @@ class Server(object):
         self._send_func_alive = False
         _log.info("Send function start.", extra=self._ip)
 
+        data: bytes = b''  # No use except avoiding warning msg from Pycharm
         try:
             while True:
 
