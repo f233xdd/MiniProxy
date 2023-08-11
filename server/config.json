@@ -1,9 +1,11 @@
 {
   "data_max_length": 4096,
-  "server_host": "x.x.x.x",
-  "ports": [
-    null,
-    null
-  ],
-  "file_log": false
+  "local_address": {
+    "private_ip": "x.x.x.x",
+    "ports": [
+      null,
+      null
+    ]
+  },
+  "file_log": true
 }

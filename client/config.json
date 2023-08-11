@@ -1,12 +1,18 @@
 {
   "host": {
     "data_max_length": 4096,
-    "server_address": "x.x.x.x:x",
+    "server_address": {
+      "internet_ip": "x.x.x.x",
+      "port": null
+    },
     "debug": false
   },
   "visitor": {
     "data_max_length": 4096,
-    "server_address": "x.x.x.x:x",
+    "server_address": {
+      "internet_ip": "x.x.x.x",
+      "port": null
+    },
     "virtual_open_port": 25565,
     "debug": false
   }

@@ -4,3 +4,4 @@
 ./client/virtual_mc/
 *.pyc
 *.pyi
+*.log

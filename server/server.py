@@ -45,7 +45,6 @@ class Server(object):
     _queue = queue_ex.DoubleQueue()
 
     def __init__(self, host: str, port: int):
-        # TODO: In the future we'll add the function about the arg 'mode'
 
         self._ip = {'ip': f"{host}:{port}"}
         self._port = port  # work as a port and a queue flag
@@ -93,7 +92,7 @@ class Server(object):
                 self._to_client = self._queue.get(self._port, timeout=3)
                 break
 
-            except (TimeoutError, queue.Empty):  # avoid a client is not alive, to_client has not linked
+            except queue.Empty:  # avoid a client is not alive, to_client has not linked
                 # and it is stuck forever
                 if not self._get_func_alive:  # when get function is not running, which means the client is not alive
                     raise ClientOffLineError  # break the loop to stop sticking the whole thread
@@ -166,7 +165,7 @@ class Server(object):
             while self._get_func_alive and self._send_func_alive:
                 time.sleep(0.001)
 
-    # TODO: Dose it work properly?
+    # FIXME: Dose it work properly?
     def check_client_alive(self):
         """when both sides stop sending data and receiving data, it'll work"""
         while True:

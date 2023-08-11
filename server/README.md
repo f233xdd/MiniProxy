@@ -1,16 +1,16 @@
 # Server
 
 * This is the server part.
-* You should run **_main.py_** in order to get started.
+* You can simply run **_main.py_** in order to get started.
 
 ### HOW-TO(config.json)
 
-* **_data_max_length_**( int ) decides how much a packet will be sent.
-* **_server_host_**( str ) is your server ip.
-* **_ports_**( list[int, int] ) decides which ports you'll open for connections.
-* **_file_log_**( bool ) decides whether what it prints on the console will be written is a file called ServerLog.log.
+* `data_max_length( int )` It decides how much a packet will be sent.
+* `private_ip( str )` It's the Intranet IP of your server.
+* `ports( list[int, int] )` It decides which ports you'll open for connections.
+* `file_log( bool )` What is printed on the console will be kept in a file called ServerLog.log except exceptions.
 
 #### Tips:
 
-* server_host only includes the intranet ip address of your server.
-* please check the config before you start.
+* `local_address` only includes the **Intranet IP** address of your server.
+* Please check the config before you start.

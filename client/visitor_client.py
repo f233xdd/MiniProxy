@@ -1,4 +1,5 @@
 # the part which connected with Minecraft
+import queue
 import socket
 import threading
 
@@ -45,7 +46,7 @@ class VisitClient(client.Client):
             while True:
                 try:
                     data = self._data_queue_2.get(timeout=2)
-                except TimeoutError:
+                except queue.Empty:
                     if not self._get_func_alive:
                         self._send_func_alive = False
                         break
@@ -92,7 +93,7 @@ class VisitClient(client.Client):
             print(f"Error: {error} from get_local_data")
             self._get_func_alive = False
 
-    def virtual_server_main(self):
+    def virtual_server_main(self):  # FIXME: can not run properly
         functions = [self.__send_java_data, self.__get_local_data]
         while True:
             self.__connect_mc_client()

@@ -17,8 +17,8 @@ def init():
     visitor_config = json.load(file)["visitor"]
 
     client.MAX_LENGTH = visitor_config["data_max_length"]
-    addr = visitor_config["server_address"].split(':')
-    server_addr = addr[0], int(addr[1])
+    addr = visitor_config["server_address"]
+    server_addr = addr["internet_ip"], addr["port"]
     virtual_port = visitor_config["virtual_open_port"]
     visitor_client.debug = visitor_config["debug"]
 

@@ -16,8 +16,8 @@ def init():
     host_config = json.load(file)["host"]
 
     client.MAX_LENGTH = host_config["data_max_length"]
-    addr = host_config["server_address"].split(':')
-    server_addr = addr[0], int(addr[1])
+    addr = host_config["server_address"]
+    server_addr = addr["internet_ip"], addr["port"]
     host_client.debug = host_config["debug"]
 
 
