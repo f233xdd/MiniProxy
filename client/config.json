@@ -1,19 +1,27 @@
 {
   "host": {
-    "data_max_length": 4096,
+    "data_max_length": 16384,
     "server_address": {
-      "internet_ip": "x.x.x.x",
+      "internet_ip": "127.0.0.1",
       "port": null
     },
     "debug": false
   },
   "visitor": {
-    "data_max_length": 4096,
+    "data_max_length": 16384,
     "server_address": {
-      "internet_ip": "x.x.x.x",
+      "internet_ip": "127.0.0.1",
       "port": null
     },
     "virtual_open_port": 25565,
     "debug": false
+  },
+  "stress_test": {
+    "data_max_length": 16384,
+    "server_address": {
+      "internet_ip": "127.0.0.1",
+      "port": 9999
+    },
+    "mode": "send"
   }
 }

@@ -1,4 +1,3 @@
-# the part which connected with a server
 import queue
 import socket
 import time
@@ -24,6 +23,7 @@ def ticker(time_break: float) -> bool:
 
 
 class Client(object):
+    """the part which connected with a server, provide two queues to pass data"""
     _data_queue_1 = queue.Queue()  # for data from java to server
     _data_queue_2 = queue.Queue()  # for data from server to java
 
