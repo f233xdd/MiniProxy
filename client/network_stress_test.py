@@ -12,9 +12,9 @@ data: bytes = (
 config = json.load(open("config.json"))["stress_test"]
 MAX_LENGTH: int = config["data_max_length"]
 ip: str = config["server_address"]["internet_ip"]
+port: int = config["server_address"]["port"]
+mode: str = config["mode"]
 
-mode = input("send or recv \\> ")
-port = int(input("which port \\> "))
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((ip, port))
