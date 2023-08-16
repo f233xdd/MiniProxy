@@ -1,6 +1,7 @@
 import queue
 import logging
 import sys
+import typing
 
 _format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
 _format_time = "%H:%M:%S"
@@ -25,7 +26,7 @@ class DoubleQueue(object):
         self._flag_1: int | None = None
         self._flag_2: int | None = None
 
-    def add_flag(self, flag: int):
+    def add_flag(self, flag: int) -> None:
         if self._flag_1 is None:
             self._flag_1 = flag
 
@@ -35,34 +36,73 @@ class DoubleQueue(object):
         else:
             _log.error("MemoryError: Got more than two flags.")
 
-    def put(self, data, flag: int, block: bool = True, timeout: float | None = None):
+    def put(self, data, flag: int, exchange: bool = False, block: bool = True, timeout: float | None = None) -> None:
         if flag == self._flag_1:
-            self._queue_1.put(data, block=block, timeout=timeout)
+            if exchange:
+                self._queue_2.put(data, block=block, timeout=timeout)
+            else:
+                self._queue_1.put(data, block=block, timeout=timeout)
 
         elif flag == self._flag_2:
-            self._queue_2.put(data, block=block, timeout=timeout)
+            if exchange:
+                self._queue_1.put(data, block=block, timeout=timeout)
+            else:
+                self._queue_2.put(data, block=block, timeout=timeout)
 
         else:
             _log.error("ValueError: flag number is not correct.")
             _log.debug(f"_sign_1: {self._flag_1}, _sign_2: {self._flag_2}, input_sign: {flag}.")
 
-    def get(self, flag: int, block: bool = True, timeout: float | None = None):
+    def get(self, flag: int, exchange: bool = False, block: bool = True, timeout: float | None = None) -> typing.Any:
         if flag == self._flag_1:
-            return self._queue_2.get(block=block, timeout=timeout)
+            if exchange:
+                return self._queue_2.get(block=block, timeout=timeout)
+            else:
+                return self._queue_1.get(block=block, timeout=timeout)
 
         elif flag == self._flag_2:
-            return self._queue_1.get(block=block, timeout=timeout)
+            if exchange:
+                return self._queue_1.get(block=block, timeout=timeout)
+            else:
+                return self._queue_2.get(block=block, timeout=timeout)
 
         else:
             _log.error("ValueError: flag number is not correct.")
             _log.debug(f"_sign_1: {self._flag_1}, _sign_2: {self._flag_2}, input_sign: {flag}.")
 
-    def empty(self, flag):
+    def empty(self, flag, exchange: bool = False) -> bool:
         if flag == self._flag_1:
-            return self._queue_2.empty()
+            if exchange:
+                return self._queue_2.empty()
+            else:
+                return self._queue_1.empty()
 
         elif flag == self._flag_2:
-            return self._queue_1.empty()
+            if exchange:
+                return self._queue_1.empty()
+            else:
+                return self._queue_2.empty()
+
+        else:
+            _log.error("ValueError: Flag number is not correct.")
+            _log.debug(f"_flag_1: {self._flag_1}, _flag_2: {self._flag_2}, input_flag: {flag}.")
+
+    def get_all(self, flag, exchange: bool = False) -> typing.Generator:
+        if flag == self._flag_1:
+            if exchange:
+                while not self._queue_2.empty():
+                    yield self._queue_2.get()
+            else:
+                while not self._queue_1.empty():
+                    yield self._queue_1.get()
+
+        elif flag == self._flag_2:
+            if exchange:
+                while not self._queue_1.empty():
+                    yield self._queue_1.get()
+            else:
+                while not self._queue_2.empty():
+                    yield self._queue_2.get()
 
         else:
             _log.error("ValueError: Flag number is not correct.")

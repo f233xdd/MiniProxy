@@ -32,14 +32,10 @@ def main():
     print("Create threads.", end='... ')
     thread_1 = threading.Thread(target=server_1.start)
     thread_2 = threading.Thread(target=server_2.start)
-    check_thread = [threading.Thread(target=func) for func in
-                    [server_1.check_client_alive, server_2.check_client_alive]]
     print("Done!")
 
     thread_1.start()
     thread_2.start()
-    for thread in check_thread:
-        thread.start()
     print("Server running!\n")
 
 

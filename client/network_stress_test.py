@@ -12,8 +12,10 @@ data: bytes = (
 config = json.load(open("config.json"))["stress_test"]
 MAX_LENGTH: int = config["data_max_length"]
 ip: str = config["server_address"]["internet_ip"]
-port: int = config["server_address"]["port"]
-mode: str = config["mode"]
+# port: int = config["server_address"]["port"]
+# mode: str = config["mode"]
+port = int(input('port> '))
+mode = input('mode> ')
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((ip, port))
@@ -36,12 +38,16 @@ def wait(sign: bytes):
 def send():
     bag: bytes = data * int(MAX_LENGTH / 128)
     client.sendall(f"{MAX_LENGTH}".encode("utf_8"))
-    wait(b'\x00\x00\x00')
+    wait(b'GOT')
 
-    for i in range(10):
+    for i in range(5):
         client.sendall(bag)
+        print(bag)
         print(f"send data[{i}]")
-        wait(b'\x00\x00\x00')
+        wait(b'GOT')
+
+    client.sendall(b"END")
+    print("\nDone")
 
 
 def recv():
@@ -49,12 +55,19 @@ def recv():
 
     MAX_LENGTH = int(client.recv(1024).decode("utf_8"))
     bag: bytes = data * int(MAX_LENGTH / 128)
-    client.sendall(b"\x00\x00\x00")
+    client.sendall(b"GOT")
 
-    for i in range(10):
+    i = 0
+    while True:
         recv_data = client.recv(MAX_LENGTH)
-        print(f"recv data[{i}] offset: {check(recv_data, bag)}%")
-        client.sendall(b'\x00\x00\x00')
+        print(recv_data)
+        if recv_data != b"END":
+            print(f"recv data[{i}] offset: {check(recv_data, bag)}%")
+        else:
+            print("\nDone.")
+            break
+        client.sendall(b'GOT')
+        i += 1
 
 
 if mode == "send":

@@ -1,10 +1,10 @@
 {
-  "data_max_length": 16384,
+  "data_max_length": 4096,
   "local_address": {
     "private_ip": "127.0.0.1",
     "ports": [
-      null,
-      null
+      25565,
+      25566
     ]
   },
   "file_log": true

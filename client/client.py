@@ -1,6 +1,8 @@
 import queue
 import socket
 import time
+import logging
+import sys
 
 debug: bool = True
 MAX_LENGTH: int = 0
@@ -21,6 +23,32 @@ def ticker(time_break: float) -> bool:
             return True
         else:
             return False
+
+
+#  log config
+file_log = True
+
+_format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
+_format_time = "%H:%M:%S"
+
+_formatter = logging.Formatter(_format_msg, _format_time)
+
+_file_handler = logging.FileHandler("ServerLog.log", mode='a', encoding='utf-8')
+_file_handler.setFormatter(_formatter)
+_file_handler.setLevel(logging.DEBUG)
+
+_console_handler = logging.StreamHandler(sys.stdout)
+_console_handler.setFormatter(_formatter)
+_console_handler.setLevel(logging.DEBUG)
+
+_log = logging.getLogger("ClientLog")
+_log.setLevel(logging.DEBUG)
+_log.addHandler(_console_handler)
+if file_log:
+    _log.addHandler(_file_handler)
+
+    with open("ServerLog.log", mode='a', encoding='utf_8') as log_file:
+        log_file.write("===================================LOG START===================================\n")
 
 
 class Client(object):
