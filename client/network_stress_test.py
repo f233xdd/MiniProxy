@@ -12,10 +12,8 @@ data: bytes = (
 config = json.load(open("config.json"))["stress_test"]
 MAX_LENGTH: int = config["data_max_length"]
 ip: str = config["server_address"]["internet_ip"]
-# port: int = config["server_address"]["port"]
-# mode: str = config["mode"]
-port = int(input('port> '))
-mode = input('mode> ')
+port: int = config["server_address"]["port"]
+mode: str = config["mode"]
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((ip, port))
@@ -37,7 +35,7 @@ def wait(sign: bytes):
 
 def send():
     bag: bytes = data * int(MAX_LENGTH / 128)
-    client.sendall(f"{MAX_LENGTH}".encode("utf_8"))
+    client.sendall(MAX_LENGTH.to_bytes(8))
     wait(b'GOT')
 
     for i in range(20):
@@ -52,7 +50,7 @@ def send():
 def recv():
     global MAX_LENGTH
 
-    MAX_LENGTH = int(client.recv(1024).decode("utf_8"))
+    MAX_LENGTH = int.from_bytes(client.recv(1024))
     bag: bytes = data * int(MAX_LENGTH / 128)
     client.sendall(b"GOT")
 

@@ -14,7 +14,7 @@
       "internet_ip": "127.0.0.1",
       "port": null
     },
-    "virtual_open_port": 25565,
+    "virtual_open_port": 25566,
     "file_log": true,
     "debug": false
   },

@@ -1,5 +1,6 @@
 import queue
 import socket
+import threading
 import time
 import logging
 import sys
@@ -9,7 +10,7 @@ import buffer
 debug: bool = False
 MAX_LENGTH: int = -1
 
-_current_time = None
+_current_time = 0
 
 
 def ticker(time_break: float) -> bool:
@@ -67,6 +68,9 @@ class Client(object):
         self._encoding = 'utf_8'
         self._server: socket.socket
 
+        self._buf = buffer.Buffer()
+        self._event = threading.Event()
+
         self.__create_socket()
 
     def __create_socket(self):
@@ -81,19 +85,33 @@ class Client(object):
         """get data from server"""
         while True:
             data = self._server.recv(MAX_LENGTH)
-            if data == b'\x00':
-                continue
-            self._data_queue_2.put(data)
 
-            if data:
-                _log.debug(data)
+            if data == b"SIGNAL":  # the other recv data successfully
+                self._event.set()
+
+            elif data[0:3] == b"LEN":
+                self._buf.set_length(int.from_bytes(data[3:]))
+                _log.debug(int.from_bytes(data[3:]))
+                self._server.send(b"SIGNAL")  # show the other that we recv data successfully
+
+            else:
+                self._buf.put(data)
+
+                complete = self._buf.get()
+                _log.debug(f"complete: {complete}, {self._buf.total_size}, {self._buf.length}")
+
+                if complete:
+                    self._data_queue_2.put(complete)
+                    _log.debug(data)
 
     def send_data(self):
         """send data to server"""
         while True:
             data = self._data_queue_1.get()
-            self._server.sendall(data)
-            self._server.send(b"SIGNAL")
-
             if data:
+                self._server.send(b''.join([b'LEN', len(data).to_bytes(8)]))
+                self._event.wait()
+                self._server.sendall(data)
+                self._event.clear()
+
                 _log.debug(data)

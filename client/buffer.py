@@ -5,12 +5,16 @@ class Buffer(object):
         self._data_queue: list[bytes] = []
         self._total_size: int = 0
 
-    def set_length(self, length) -> None:
+    def set_length(self, length: int) -> None:
         """set the size of the buffer if it is empty"""
-        if not self._data_queue:
+        if not self._data_queue and length > 0:
             self._length = length
+        elif length <= 0:
+            raise ValueError(f"unexpected length: {length}")
+        else:
+            raise RuntimeError("data queue if not empty")
 
-    def put(self, data) -> bytes | None:
+    def put(self, data: bytes) -> bytes | None:
         """put data in the buffer and mark its length"""
         self._total_size += len(data)
 
@@ -36,7 +40,10 @@ class Buffer(object):
         """return data in the buffer if it's full"""
         if self.is_full():
             self._total_size = 0
-            return b''.join(self._data_queue)
+            data = b''.join(self._data_queue)
+            self._data_queue.clear()
+
+            return data
 
     @property
     def total_size(self) -> int:

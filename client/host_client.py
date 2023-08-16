@@ -43,7 +43,8 @@ class HostClient(client.Client):
                         break
                     else:
                         if client.ticker(5):
-                            self._virtual_client.send(b'\x00')
+                            pass
+                            # self._virtual_client.send(b'\x00')
                         continue
 
                 if self._get_func_alive is False:

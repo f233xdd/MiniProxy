@@ -16,7 +16,8 @@ def check(recv_data: bytes, bag: bytes) -> float:
 
 
 def recv():
-    MAX_LENGTH = int(client.recv(1024).decode("utf_8"))
+    d = client.recv(1024)
+    MAX_LENGTH = int.from_bytes(d)
     bag: bytes = data * int(MAX_LENGTH / 128)
     client.sendall(b"GOT")
 

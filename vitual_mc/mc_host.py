@@ -25,7 +25,7 @@ def wait(sign: bytes):
 
 def send():
     bag: bytes = data * int(MAX_LENGTH / 128)
-    client.sendall(f"{MAX_LENGTH}".encode("utf_8"))
+    client.sendall(MAX_LENGTH.to_bytes(8))
     wait(b'GOT')
 
     for i in range(20):
