@@ -12,9 +12,6 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(addr)
 server.listen(1)
 client, __ = server.accept()
-# client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# client.connect(addr)
-# print(client.recv(1024).decode("utf_8"))
 
 
 def wait(sign: bytes):
@@ -29,12 +26,15 @@ def wait(sign: bytes):
 def send():
     bag: bytes = data * int(MAX_LENGTH / 128)
     client.sendall(f"{MAX_LENGTH}".encode("utf_8"))
-    wait(b'\x00\x00\x00')
+    wait(b'GOT')
 
-    for i in range(3):
+    for i in range(20):
         client.sendall(bag)
         print(f"send data[{i}]")
-        wait(b'\x00\x00\x00')
+        wait(b'GOT')
+
+    client.sendall(b"END")
+    print("\nDone")
 
 
 send()

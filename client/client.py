@@ -4,6 +4,8 @@ import time
 import logging
 import sys
 
+import buffer
+
 debug: bool = False
 MAX_LENGTH: int = -1
 

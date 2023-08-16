@@ -30,14 +30,11 @@ class HostClient(client.Client):
     def __send_java_data(self):
         """send data to java"""
         self._send_func_alive = True
-        sum_data = b""
+
         try:
             while True:
                 try:
                     data = self._data_queue_2.get(timeout=2)
-                    if data != b"SIGNAL":
-                        sum_data = b"".join([sum_data, data])
-                        continue
 
                 except queue.Empty:
                     if self._get_func_alive is False:
@@ -55,7 +52,6 @@ class HostClient(client.Client):
                     break
 
                 self._virtual_client.sendall(data)
-                sum_data = b""
 
                 if data:
                     _log.debug(data)
@@ -67,6 +63,7 @@ class HostClient(client.Client):
     def __get_local_data(self):
         """get data from java"""
         self._get_func_alive = True
+
         try:
             while True:
                 try:
