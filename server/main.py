@@ -19,6 +19,7 @@ def init():
     server_ip = addr["private_ip"]
     open_ports = addr["ports"]
     server.file_log = config["file_log"]
+    server.debug = config["debug"]
 
 
 def main():

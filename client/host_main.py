@@ -18,6 +18,7 @@ def init():
     client.MAX_LENGTH = host_config["data_max_length"]
     addr = host_config["server_address"]
     server_addr = addr["internet_ip"], addr["port"]
+    client.file_log = host_config["file_log"]
     client.debug = host_config["debug"]
 
 

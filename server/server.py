@@ -9,6 +9,7 @@ import queue_ex
 
 #  log config
 file_log = True
+debug = False
 
 _format_msg = "[%(levelname)s] [%(asctime)s] [%(ip)s] [%(funcName)s] %(message)s"
 _format_time = "%H:%M:%S"
@@ -24,7 +25,10 @@ _console_handler.setFormatter(_formatter)
 _console_handler.setLevel(logging.DEBUG)
 
 _log = logging.getLogger("ServerLog")
-_log.setLevel(logging.DEBUG)
+if debug:
+    _log.setLevel(logging.DEBUG)
+else:
+    _log.setLevel(logging.INFO)
 _log.addHandler(_console_handler)
 if file_log:
     _log.addHandler(_file_handler)
@@ -143,7 +147,7 @@ class Server(object):
             self.__link_to_client()
 
             threads = [threading.Thread(target=func) for func in [self.__get_data, self.__send_data]]
-            _log.debug("Threads start", extra=self._ip)
+            _log.info("Threads start", extra=self._ip)
 
             for thd in threads:
                 thd.start()
@@ -151,4 +155,4 @@ class Server(object):
             for thd in threads:
                 thd.join()
 
-            _log.debug("Threads are down", extra=self._ip)
+            _log.info("Threads are down", extra=self._ip)

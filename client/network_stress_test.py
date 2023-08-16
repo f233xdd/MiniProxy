@@ -40,9 +40,8 @@ def send():
     client.sendall(f"{MAX_LENGTH}".encode("utf_8"))
     wait(b'GOT')
 
-    for i in range(5):
+    for i in range(20):
         client.sendall(bag)
-        print(bag)
         print(f"send data[{i}]")
         wait(b'GOT')
 
@@ -60,11 +59,10 @@ def recv():
     i = 0
     while True:
         recv_data = client.recv(MAX_LENGTH)
-        print(recv_data)
         if recv_data != b"END":
-            print(f"recv data[{i}] offset: {check(recv_data, bag)}%")
+            print(f"recv data[{i}] | offset: {check(recv_data, bag)}%")
         else:
-            print("\nDone.")
+            print("\nDone")
             break
         client.sendall(b'GOT')
         i += 1

@@ -3,9 +3,10 @@
   "local_address": {
     "private_ip": "127.0.0.1",
     "ports": [
-      25565,
-      25566
+      null,
+      null
     ]
   },
-  "file_log": true
+  "file_log": true,
+  "debug": false
 }

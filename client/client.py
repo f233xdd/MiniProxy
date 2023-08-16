@@ -4,10 +4,10 @@ import time
 import logging
 import sys
 
-debug: bool = True
-MAX_LENGTH: int = 0
+debug: bool = False
+MAX_LENGTH: int = -1
 
-_current_time = 0
+_current_time = None
 
 
 def ticker(time_break: float) -> bool:
@@ -42,7 +42,10 @@ _console_handler.setFormatter(_formatter)
 _console_handler.setLevel(logging.DEBUG)
 
 _log = logging.getLogger("ClientLog")
-_log.setLevel(logging.DEBUG)
+if debug:
+    _log.setLevel(logging.DEBUG)
+else:
+    _log.setLevel(logging.INFO)
 _log.addHandler(_console_handler)
 if file_log:
     _log.addHandler(_file_handler)
@@ -80,9 +83,8 @@ class Client(object):
                 continue
             self._data_queue_2.put(data)
 
-            if debug:
-                if data:
-                    print("get_data: ", data)
+            if data:
+                _log.debug(data)
 
     def send_data(self):
         """send data to server"""
@@ -91,6 +93,5 @@ class Client(object):
             self._server.sendall(data)
             self._server.send(b"SIGNAL")
 
-            if debug:
-                if data:
-                    print("send_data: ", data)
+            if data:
+                _log.debug(data)

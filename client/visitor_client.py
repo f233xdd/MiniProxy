@@ -5,7 +5,7 @@ import threading
 
 import client
 
-debug: bool = client.debug
+_log = client._log
 
 
 class VisitClient(client.Client):
@@ -29,7 +29,7 @@ class VisitClient(client.Client):
 
         ip = socket.gethostbyname(socket.gethostname())
         addr = (ip, self._port)
-        print(f"{ip}:{self._port}")
+        print(f"{ip}:{self._port}\n")
 
         self._virtual_server.bind(addr)
         self._virtual_server.listen(1)
@@ -37,7 +37,7 @@ class VisitClient(client.Client):
     def __connect_mc_client(self):
         """let mc connect with it as a server"""
         self._mc_client, __ = self._virtual_server.accept()
-        print("Mc connected")
+        _log.info("Mc connected")
 
     def __send_java_data(self):
         """send data to java"""
@@ -54,7 +54,7 @@ class VisitClient(client.Client):
                 except queue.Empty:
                     if self._get_func_alive is False:
                         self._send_func_alive = False
-                        print("__send_java_data is down for get func(timeout)")
+                        _log.warning("__send_java_data is down for get func(timeout)")
                         break
                     else:
                         if client.ticker(5):
@@ -63,18 +63,17 @@ class VisitClient(client.Client):
 
                 if self._get_func_alive is False:
                     self._send_func_alive = False
-                    print("__send_java_data is down for get func")
+                    _log.warning("__send_java_data is down for get func")
                     break
 
                 self._mc_client.sendall(data)
                 sum_data = b""
 
-                if debug:
-                    if data:
-                        print("[V]send_java_data: ", data)
+                if data:
+                    _log.debug(data)
 
         except ConnectionError as error:
-            print(f"Error: {error} from send_java_data")
+            _log.error(f"{error} from send_java_data")
             self._send_func_alive = False
 
     def __get_local_data(self):
@@ -87,24 +86,23 @@ class VisitClient(client.Client):
                 except TimeoutError:
                     if self._send_func_alive is False:
                         self._get_func_alive = False
-                        print("__get_local_data is down for send func(timeout)")
+                        _log.warning("__get_local_data is down for send func(timeout)")
                         break
                     else:
                         continue
 
                 if self._send_func_alive is False:
                     self._get_func_alive = False
-                    print("__get_local_data is down for send func")
+                    _log.warning("__get_local_data is down for send func")
                     break
 
                 self._data_queue_1.put(data)
 
-                if debug:
-                    if data:
-                        print("[V]get_local_data: ", data)
+                if data:
+                    _log.debug(data)
 
         except ConnectionError as error:
-            print(f"Error: {error} from get_local_data")
+            _log.error(f"{error} from send_java_data")
             self._get_func_alive = False
 
     def virtual_server_main(self):  # FIXME: can not run properly
@@ -123,4 +121,4 @@ class VisitClient(client.Client):
                 thd.join()
 
             self._mc_client.settimeout(None)
-            print("Virtual server is down, restart...")
+            _log.info("Virtual server is down, restart...")
