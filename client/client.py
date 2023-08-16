@@ -2,6 +2,7 @@ import queue
 import socket
 import time
 
+debug: bool = True
 MAX_LENGTH: int = 0
 
 _current_time = 0
@@ -51,8 +52,17 @@ class Client(object):
                 continue
             self._data_queue_2.put(data)
 
+            if debug:
+                if data:
+                    print("get_data: ", data)
+
     def send_data(self):
         """send data to server"""
         while True:
-            sent_data = self._data_queue_1.get()
-            self._server.sendall(sent_data)
+            data = self._data_queue_1.get()
+            self._server.sendall(data)
+            self._server.send(b"SIGNAL")
+
+            if debug:
+                if data:
+                    print("send_data: ", data)

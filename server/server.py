@@ -22,7 +22,7 @@ _file_handler.setLevel(logging.DEBUG)
 
 _console_handler = logging.StreamHandler(sys.stdout)
 _console_handler.setFormatter(_formatter)
-_console_handler.setLevel(logging.DEBUG)
+_console_handler.setLevel(logging.INFO)
 
 _log = logging.getLogger("ServerLog")
 _log.setLevel(logging.DEBUG)
@@ -105,6 +105,11 @@ class Server(object):
         try:
             while True:
                 data = self._client.recv(MAX_LENGTH)
+
+                length = len(data)
+                if length:
+                    _log.debug(f"get data length: {length}", extra=self._ip)
+
                 self._data_queue.put(data)
 
         except (ConnectionResetError, TimeoutError) as error:
@@ -135,6 +140,10 @@ class Server(object):
                         break
 
                     self._to_client.sendall(data)
+
+                    length = len(data)
+                    if length:
+                        _log.debug(f"send data length: {length}", extra=self._ip)
 
         except BrokenPipeError:
             self._cache = data  # No, it won't unless you say so.

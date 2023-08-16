@@ -20,7 +20,7 @@ def init():
     addr = visitor_config["server_address"]
     server_addr = addr["internet_ip"], addr["port"]
     virtual_port = visitor_config["virtual_open_port"]
-    visitor_client.debug = visitor_config["debug"]
+    client.debug = visitor_config["debug"]
 
 
 def main():

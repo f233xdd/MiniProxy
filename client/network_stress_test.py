@@ -15,7 +15,6 @@ ip: str = config["server_address"]["internet_ip"]
 port: int = config["server_address"]["port"]
 mode: str = config["mode"]
 
-
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((ip, port))
 print(client.recv(1024).decode("utf_8"))
@@ -64,32 +63,3 @@ elif mode == "recv":
     recv()
 else:
     raise ValueError
-
-"""
-def test(recv_data: bytes) -> int:
-    check_len = 0
-    offset = 0
-
-    while check_len != MAX_LENGTH:
-        split = recv_data[check_len:check_len + 128]
-        if split == data:
-            check_len += 128
-        else:
-            if len(split) == len(data):
-                for s1, s2 in zip(data, split):
-                    if s1 != s2:
-                        pass  # TODO: how?
-            else:
-                k = 0
-                v = 0
-                while k != 128:
-                    if split[k] != data[v]:
-                        k += 1
-                        offset += 1
-                        continue
-                    else:
-                        k += 1
-                        v += 1
-
-    return offset
-"""

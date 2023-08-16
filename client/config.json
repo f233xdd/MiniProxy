@@ -5,7 +5,7 @@
       "internet_ip": "127.0.0.1",
       "port": null
     },
-    "debug": false
+    "debug": true
   },
   "visitor": {
     "data_max_length": 16384,
@@ -14,7 +14,7 @@
       "port": null
     },
     "virtual_open_port": 25565,
-    "debug": false
+    "debug": true
   },
   "stress_test": {
     "data_max_length": 16384,
