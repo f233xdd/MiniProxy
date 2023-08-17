@@ -6,6 +6,7 @@ data: bytes = (
     b"\x53\x54\x55\x56\x57\x58\x59\x60\x61\x62\x63"
 )
 
+MAX_LENGTH = None
 addr = (socket.gethostname(), 25566)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(addr)
@@ -15,7 +16,18 @@ def check(recv_data: bytes, bag: bytes) -> float:
     return len(recv_data) / len(bag) * 100
 
 
+def wait(sign: bytes):
+    while True:
+        recv_data = client.recv(MAX_LENGTH)
+        if recv_data != sign:
+            continue
+        else:
+            break
+
+
 def recv():
+    global MAX_LENGTH
+
     d = client.recv(1024)
     MAX_LENGTH = int.from_bytes(d)
     bag: bytes = data * int(MAX_LENGTH / 128)
@@ -27,10 +39,17 @@ def recv():
         if recv_data != b"END":
             print(f"recv data[{i}] | offset: {check(recv_data, bag)}%")
         else:
-            print("\nDone")
             break
         client.sendall(b'GOT')
         i += 1
+
+    for j in range(i):
+        client.sendall(bag)
+        print(f"send data[{j}]")
+        wait(b'GOT')
+
+    client.sendall(b"END")
+    print("\nDone")
 
 
 recv()
