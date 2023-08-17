@@ -8,6 +8,7 @@ import sys
 import buffer
 
 debug: bool = False
+
 MAX_LENGTH: int = -1
 
 _current_time = 0
@@ -36,7 +37,7 @@ _format_time = "%H:%M:%S"
 
 _formatter = logging.Formatter(_format_msg, _format_time)
 
-_file_handler = logging.FileHandler("ServerLog.log", mode='a', encoding='utf-8')
+_file_handler = logging.FileHandler("ClientLog.log", mode='a', encoding='utf-8')
 _file_handler.setFormatter(_formatter)
 _file_handler.setLevel(logging.DEBUG)
 
@@ -53,7 +54,7 @@ _log.addHandler(_console_handler)
 if file_log:
     _log.addHandler(_file_handler)
 
-    with open("ServerLog.log", mode='a', encoding='utf_8') as log_file:
+    with open("ClientLog.log", mode='a', encoding='utf_8') as log_file:
         log_file.write("===================================LOG START===================================\n")
 
 

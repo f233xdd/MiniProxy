@@ -8,8 +8,10 @@ import logging
 import queue_ex
 
 #  log config
-file_log = True
-debug = False
+file_log: bool = True
+debug: bool = True
+log_length: bool = True
+log_context: bool = False
 
 _format_msg = "[%(levelname)s] [%(asctime)s] [%(ip)s] [%(funcName)s] %(message)s"
 _format_time = "%H:%M:%S"
@@ -94,7 +96,16 @@ class Server(object):
                 data = self._client.recv(MAX_LENGTH)
 
                 if data:
-                    _log.debug(f"get data: {data}", extra=self._ip)
+                    msg = ""
+                    if log_length:
+                        msg = "".join([msg, f"[{len(data)}]"])
+                    if log_context:
+                        if msg:
+                            msg = "".join([msg, ' ', str(data)])
+                        else:
+                            msg = data
+
+                    _log.debug(msg, extra=self._ip)
 
                     self._data_queue.put(data, self._port, exchange=True)
 
@@ -127,7 +138,16 @@ class Server(object):
                 self._client.sendall(data)
 
                 if data:
-                    _log.debug(f"send data: {data}", extra=self._ip)
+                    msg = ""
+                    if log_length:
+                        msg = "".join([msg, f"[{len(data)}]"])
+                    if log_context:
+                        if msg:
+                            msg = "".join([msg, ' ', str(data)])
+                        else:
+                            msg = data
+
+                    _log.debug(msg, extra=self._ip)
 
         except BrokenPipeError:
             _log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self._ip)

@@ -6,7 +6,7 @@ data: bytes = (
     b"\x53\x54\x55\x56\x57\x58\x59\x60\x61\x62\x63"
 )
 
-MAX_LENGTH = 128
+MAX_LENGTH = 8192
 addr = (socket.gethostname(), 25565)
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(addr)

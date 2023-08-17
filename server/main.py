@@ -15,11 +15,12 @@ def init():
     config = json.load(json_file)
     #  quick set up
     server.MAX_LENGTH = config["data_max_length"]
-    addr = config["local_address"]
-    server_ip = addr["private_ip"]
-    open_ports = addr["ports"]
+    server_ip = config["local_address"]["private_ip"]
+    open_ports = config["local_address"]["ports"]
     server.file_log = config["file_log"]
-    server.debug = config["debug"]
+    server.debug = config["debug"]["global"]
+    server.log_length = config["debug"]["length"]
+    server.log_context = config["debug"]["context"]
 
 
 def main():
