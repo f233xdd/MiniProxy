@@ -1,4 +1,6 @@
 import socket
+import threading
+import time
 
 data: bytes = (
     b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\x23\x24\x25\x26"
@@ -8,12 +10,10 @@ data: bytes = (
 
 MAX_LENGTH = None
 addr = (socket.gethostname(), 25566)
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(addr)
 
 
-def check(recv_data: bytes, bag: bytes) -> float:
-    return len(recv_data) / len(bag) * 100
+def check(recv_data: bytes, complete: bytes) -> float:
+    return len(recv_data) / len(complete) * 100
 
 
 def wait(sign: bytes):
@@ -25,31 +25,52 @@ def wait(sign: bytes):
             break
 
 
-def recv():
-    global MAX_LENGTH
-
-    d = client.recv(1024)
-    MAX_LENGTH = int.from_bytes(d)
-    bag: bytes = data * int(MAX_LENGTH / 128)
-    client.sendall(b"GOT")
-
-    i = 0
-    while True:
-        recv_data = client.recv(MAX_LENGTH)
-        if recv_data != b"END":
-            print(f"recv data[{i}] | offset: {check(recv_data, bag)}%")
-        else:
-            break
-        client.sendall(b'GOT')
-        i += 1
-
-    for j in range(i):
-        client.sendall(bag)
-        print(f"send data[{j}]")
+def send():
+    for i in range(20):
+        client.sendall(bag + f"{time.time()}".encode("utf_8"))
+        print(f"send data[{i}]")
         wait(b'GOT')
 
-    client.sendall(b"END")
-    print("\nDone")
+    client.send(b"END")
 
 
-recv()
+def recv():
+    i = 0
+    while True:
+        recv_data = client.recv(MAX_LENGTH + 18)
+        recv_time = time.time()
+
+        if recv_data != b"END":
+            offset = check(recv_data[:MAX_LENGTH], bag)
+            send_time = float(recv_data[MAX_LENGTH:].decode("utf_8"))
+            delay = round(recv_time - send_time, 3) * 1000
+
+            print(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
+        else:
+            break
+
+        client.send(b'GOT')
+        i += 1
+
+
+def init():
+    _client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    _client.connect(addr)
+
+    d = _client.recv(1024)
+    _MAX_LENGTH = int.from_bytes(d)
+    _bag: bytes = data * int(_MAX_LENGTH / 64)
+
+    return _client, _bag, _MAX_LENGTH
+
+
+def start():
+    recv()
+    send()
+
+
+if __name__ == '__main__':
+    client, bag, MAX_LENGTH = init()
+    client.send(b"GOT")
+
+    start()

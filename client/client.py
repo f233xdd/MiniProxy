@@ -71,6 +71,7 @@ class Client(object):
 
         self._buf = buffer.Buffer()
         self._event = threading.Event()
+        self._lock = threading.Lock()
 
         self.__create_socket()
 
@@ -93,7 +94,9 @@ class Client(object):
             elif data[0:3] == b"LEN":
                 self._buf.set_length(int.from_bytes(data[3:]))
                 _log.debug(int.from_bytes(data[3:]))
-                self._server.send(b"SIGNAL")  # show the other that we recv data successfully
+
+                with self._lock:
+                    self._server.send(b"SIGNAL")  # show the other that we recv data successfully
 
             else:
                 self._buf.put(data)
@@ -110,9 +113,13 @@ class Client(object):
         while True:
             data = self._data_queue_1.get()
             if data:
-                self._server.send(b''.join([b'LEN', len(data).to_bytes(8)]))
-                self._event.wait()
-                self._server.sendall(data)
-                self._event.clear()
+                with self._lock:
+                    self._server.send(b''.join([b'LEN', len(data).to_bytes(8)]))
 
+                self._event.wait()
+
+                with self._lock:
+                    self._server.sendall(data)
+
+                self._event.clear()
                 _log.debug(data)
