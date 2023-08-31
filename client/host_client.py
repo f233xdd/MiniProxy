@@ -2,10 +2,24 @@
 import queue
 import socket
 import threading
+import logging
 
 import client
 
 _log = client._log
+
+if client.file_log:
+    _format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
+    _format_time = "%H:%M:%S"
+    _formatter = logging.Formatter(_format_msg, _format_time)
+
+    _file_handler = logging.FileHandler("HostClientLog.log", mode='a', encoding='utf-8')
+    _file_handler.setFormatter(_formatter)
+    _file_handler.setLevel(logging.DEBUG)
+    _log.addHandler(_file_handler)
+
+    with open("HostClientLog.log", mode='a+', encoding='utf_8') as log_file:
+        log_file.write("===================================LOG START===================================\n")
 
 
 class HostClient(client.Client):

@@ -1,21 +1,21 @@
 {
   "host": {
-    "data_max_length": 16384,
+    "data_max_length": 2097152,
     "server_address": {
       "internet_ip": "43.228.38.117",
       "port": 25565
     },
-    "file_log": true,
+    "file_log": false,
     "debug": false
   },
   "visitor": {
-    "data_max_length": 16384,
+    "data_max_length": 2097152,
     "server_address": {
       "internet_ip": "43.228.38.117",
       "port": 25566
     },
     "virtual_open_port": 25566,
-    "file_log": true,
+    "file_log": false,
     "debug": false
   },
   "stress_test": {

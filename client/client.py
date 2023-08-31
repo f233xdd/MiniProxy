@@ -4,10 +4,11 @@ import threading
 import time
 import logging
 import sys
+import struct
 
 import buffer
 
-debug: bool = False
+debug: bool = True
 
 MAX_LENGTH: int = -1
 
@@ -37,13 +38,9 @@ _format_time = "%H:%M:%S"
 
 _formatter = logging.Formatter(_format_msg, _format_time)
 
-_file_handler = logging.FileHandler("ClientLog.log", mode='a', encoding='utf-8')
-_file_handler.setFormatter(_formatter)
-_file_handler.setLevel(logging.DEBUG)
-
 _console_handler = logging.StreamHandler(sys.stdout)
 _console_handler.setFormatter(_formatter)
-_console_handler.setLevel(logging.DEBUG)
+_console_handler.setLevel(logging.INFO)
 
 _log = logging.getLogger("ClientLog")
 if debug:
@@ -51,11 +48,6 @@ if debug:
 else:
     _log.setLevel(logging.INFO)
 _log.addHandler(_console_handler)
-if file_log:
-    _log.addHandler(_file_handler)
-
-    with open("ClientLog.log", mode='a', encoding='utf_8') as log_file:
-        log_file.write("===================================LOG START===================================\n")
 
 
 class Client(object):
@@ -69,7 +61,10 @@ class Client(object):
         self._encoding = 'utf_8'
         self._server: socket.socket
 
-        self._buf = buffer.Buffer()
+        self._data_buf = buffer.Buffer()
+        self._header_buf = buffer.Buffer()
+        self._header_buf.set_length(4)
+
         self._event = threading.Event()
         self._lock = threading.Lock()
 
@@ -88,38 +83,52 @@ class Client(object):
         while True:
             data = self._server.recv(MAX_LENGTH)
 
-            if data == b"SIGNAL":  # the other recv data successfully
-                self._event.set()
+            if data:
+                _log.debug(data)
 
-            elif data[0:3] == b"LEN":
-                self._buf.set_length(int.from_bytes(data[3:]))
-                _log.debug(int.from_bytes(data[3:]))
+            while data:
+                if len(data) >= 4:
+                    if self._data_buf.is_empty and self._data_buf.length == -1:
+                        if not self._header_buf.is_empty:
+                            data = self._header_buf.put(data, errors="return")
+                            self._data_buf.set_length(struct.unpack('i', self._header_buf.get())[0])
+                            data = self._data_buf.put(data, errors="return")
 
-                with self._lock:
-                    self._server.send(b"SIGNAL")  # show the other that we recv data successfully
+                        else:
+                            self._data_buf.set_length(struct.unpack('i', data[:4])[0])
+                            data = data[4:]
+                            data = self._data_buf.put(data, errors="return")
 
-            else:
-                self._buf.put(data)
+                    else:
+                        data = self._data_buf.put(data, errors="return")
 
-                complete = self._buf.get()
-                _log.debug(f"complete: {complete}, {self._buf.total_size}, {self._buf.length}")
+                    if self._data_buf.is_full:
+                        d = self._data_buf.get(reset_len=True)
+                        _log.debug(f"Put {d}")
+                        self._data_queue_2.put(d)
 
-                if complete:
-                    self._data_queue_2.put(complete)
-                    _log.debug(data)
+                    else:
+                        break
+
+                else:
+                    if self._data_buf.is_empty and self._data_buf.length == -1:
+                        self._header_buf.put(data)
+                        data = b''
+
+                    else:
+                        data = self._data_buf.put(data, errors="return")
+
+                        if self._data_buf.is_full:
+                            d = self._data_buf.get(reset_len=True)
+                            _log.debug(f"Put {d}")
+                            self._data_queue_2.put(d)
 
     def send_data(self):
         """send data to server"""
         while True:
             data = self._data_queue_1.get()
             if data:
-                with self._lock:
-                    self._server.send(b''.join([b'LEN', len(data).to_bytes(8)]))
+                self._server.send(struct.pack('i', len(data)))
+                self._server.sendall(data)
 
-                self._event.wait()
-
-                with self._lock:
-                    self._server.sendall(data)
-
-                self._event.clear()
                 _log.debug(data)

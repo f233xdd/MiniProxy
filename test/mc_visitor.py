@@ -26,7 +26,7 @@ def wait(sign: bytes):
 
 
 def send():
-    for i in range(20):
+    for i in range(30):
         client.sendall(bag + f"{time.time()}".encode("utf_8"))
         print(f"send data[{i}]")
         wait(b'GOT')
