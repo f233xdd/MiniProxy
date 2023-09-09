@@ -88,7 +88,7 @@ class Client(object):
 
             while data:
                 if len(data) >= 4:
-                    if self._data_buf.is_empty and self._data_buf.length == -1:
+                    if self._data_buf.is_empty and self._data_buf.size == -1:
                         if not self._header_buf.is_empty:
                             data = self._header_buf.put(data, errors="return")
                             self._data_buf.set_length(struct.unpack('i', self._header_buf.get())[0])
@@ -111,7 +111,7 @@ class Client(object):
                         break
 
                 else:
-                    if self._data_buf.is_empty and self._data_buf.length == -1:
+                    if self._data_buf.is_empty and self._data_buf.size == -1:
                         self._header_buf.put(data)
                         data = b''
 
