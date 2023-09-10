@@ -8,8 +8,6 @@ import struct
 
 import buffer
 
-debug: bool = True
-
 MAX_LENGTH: int = -1
 
 _current_time = 0
@@ -31,7 +29,8 @@ def ticker(time_break: float) -> bool:
 
 
 #  log config
-file_log = True
+debug: bool = True
+file_log: bool = True
 
 _format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
 _format_time = "%H:%M:%S"

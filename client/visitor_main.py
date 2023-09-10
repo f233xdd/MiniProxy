@@ -22,6 +22,7 @@ def init():
     virtual_port = visitor_config["virtual_open_port"]
     client.file_log = visitor_config["file_log"]
     client.debug = visitor_config["debug"]
+    client.file_log = visitor_config["file_log"]
 
 
 def main():

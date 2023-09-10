@@ -15,24 +15,24 @@ log_context: bool = False
 
 _format_msg = "[%(levelname)s] [%(asctime)s] [%(ip)s] [%(funcName)s] %(message)s"
 _format_time = "%H:%M:%S"
-
 _formatter = logging.Formatter(_format_msg, _format_time)
-
-_file_handler = logging.FileHandler("ServerLog.log", mode='a', encoding='utf-8')
-_file_handler.setFormatter(_formatter)
-_file_handler.setLevel(logging.DEBUG)
 
 _console_handler = logging.StreamHandler(sys.stdout)
 _console_handler.setFormatter(_formatter)
 _console_handler.setLevel(logging.DEBUG)
 
 _log = logging.getLogger("ServerLog")
+
 if debug:
     _log.setLevel(logging.DEBUG)
 else:
     _log.setLevel(logging.INFO)
 _log.addHandler(_console_handler)
+
 if file_log:
+    _file_handler = logging.FileHandler("ServerLog.log", mode='a', encoding='utf-8')
+    _file_handler.setFormatter(_formatter)
+    _file_handler.setLevel(logging.DEBUG)
     _log.addHandler(_file_handler)
 
     with open("ServerLog.log", mode='a', encoding='utf_8') as log_file:
@@ -105,7 +105,8 @@ class Server(object):
                         else:
                             msg = data
 
-                    _log.debug(msg, extra=self._ip)
+                    if msg:
+                        _log.debug(msg, extra=self._ip)
 
                     self._data_queue.put(data, self._port, exchange=True)
 
@@ -147,7 +148,8 @@ class Server(object):
                         else:
                             msg = data
 
-                    _log.debug(msg, extra=self._ip)
+                    if msg:
+                        _log.debug(msg, extra=self._ip)
 
         except BrokenPipeError:
             _log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self._ip)

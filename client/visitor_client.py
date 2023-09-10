@@ -68,9 +68,6 @@ class VisitClient(client.Client):
                         _log.warning("__send_java_data is down for get func(timeout)")
                         break
                     else:
-                        if client.ticker(5):
-                            pass
-                            # self._mc_client.send(b'\x00')
                         continue
 
                 if self._get_func_alive is False:

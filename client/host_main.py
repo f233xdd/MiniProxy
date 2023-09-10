@@ -20,6 +20,7 @@ def init():
     server_addr = addr["internet_ip"], addr["port"]
     client.file_log = host_config["file_log"]
     client.debug = host_config["debug"]
+    client.file_log = host_config["file_log"]
 
 
 def main():

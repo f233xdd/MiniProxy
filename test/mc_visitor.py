@@ -1,6 +1,7 @@
 import socket
 import threading
 import time
+import struct
 
 data: bytes = (
     b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\x23\x24\x25\x26"
@@ -26,31 +27,27 @@ def wait(sign: bytes):
 
 
 def send():
-    for i in range(30):
-        client.sendall(bag + f"{time.time()}".encode("utf_8"))
-        print(f"send data[{i}]")
-        wait(b'GOT')
-
+    for i in range(200):
+        client.sendall(bag + struct.pack('d', time.time()))
     client.send(b"END")
 
 
 def recv():
     i = 0
     while True:
-        recv_data = client.recv(MAX_LENGTH + 18)
+        recv_data = client.recv(MAX_LENGTH + 8)
         recv_time = time.time()
 
         if recv_data != b"END":
             offset = check(recv_data[:MAX_LENGTH], bag)
-            send_time = float(recv_data[MAX_LENGTH:].decode("utf_8"))
+            print(recv_data[MAX_LENGTH:])
+            send_time = struct.unpack('d', recv_data[MAX_LENGTH:])[0]
             delay = round(recv_time - send_time, 3) * 1000
 
             print(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
+            i += 1
         else:
             break
-
-        client.send(b'GOT')
-        i += 1
 
 
 def init():
@@ -58,15 +55,23 @@ def init():
     _client.connect(addr)
 
     d = _client.recv(1024)
-    _MAX_LENGTH = int.from_bytes(d)
+    _MAX_LENGTH = struct.unpack('i', d)[0]
+    print(_MAX_LENGTH)
     _bag: bytes = data * int(_MAX_LENGTH / 64)
 
     return _client, _bag, _MAX_LENGTH
 
 
 def start():
-    recv()
-    send()
+    thds = [threading.Thread(target=send), threading.Thread(target=recv)]
+
+    for thd in thds:
+        thd.start()
+
+    for thd in thds:
+        thd.join()
+
+    print("Done")
 
 
 if __name__ == '__main__':
