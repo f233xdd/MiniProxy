@@ -1,9 +1,7 @@
 import queue
 import socket
 import threading
-import time
 import logging
-import sys
 import struct
 
 import buffer
@@ -13,40 +11,10 @@ MAX_LENGTH: int = -1
 _current_time = 0
 
 
-def ticker(time_break: float) -> bool:
-    global _current_time
-
-    if _current_time == 0:
-        _current_time = time.time()
-        return False
-    else:
-        current_time_break = time.time() - _current_time
-        if current_time_break >= time_break:
-            _current_time = time.time()
-            return True
-        else:
-            return False
-
-
 #  log config
-debug: bool = True
-file_log: bool = True
-
-_format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
-_format_time = "%H:%M:%S"
-
-_formatter = logging.Formatter(_format_msg, _format_time)
-
-_console_handler = logging.StreamHandler(sys.stdout)
-_console_handler.setFormatter(_formatter)
-_console_handler.setLevel(logging.INFO)
-
-_log = logging.getLogger("ClientLog")
-if debug:
-    _log.setLevel(logging.DEBUG)
-else:
-    _log.setLevel(logging.INFO)
-_log.addHandler(_console_handler)
+log_length = None
+log_context = None
+_log: logging.Logger | None = None
 
 
 class Client(object):
@@ -61,8 +29,7 @@ class Client(object):
         self._server: socket.socket
 
         self._data_buf = buffer.Buffer()
-        self._header_buf = buffer.Buffer()
-        self._header_buf.set_length(4)
+        self._header_buf = buffer.Buffer(static=True, max_size=4)
 
         self._event = threading.Event()
         self._lock = threading.Lock()

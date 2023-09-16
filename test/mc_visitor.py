@@ -40,7 +40,7 @@ def recv():
 
         if recv_data != b"END":
             offset = check(recv_data[:MAX_LENGTH], bag)
-            print(recv_data[MAX_LENGTH:])
+            print(recv_data[MAX_LENGTH:], len(recv_data))
             send_time = struct.unpack('d', recv_data[MAX_LENGTH:])[0]
             delay = round(recv_time - send_time, 3) * 1000
 

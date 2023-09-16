@@ -5,6 +5,8 @@ import json
 import visitor_client
 import client
 
+import logging_ex
+
 server_addr: tuple[str, int] = ('', -1)
 virtual_port: int = -1
 
@@ -14,15 +16,20 @@ def init():
     global server_addr, virtual_port
 
     file = open("config.json")
-    visitor_config = json.load(file)["visitor"]
+    config = json.load(file)["visitor"]
 
-    client.MAX_LENGTH = visitor_config["data_max_length"]
-    addr = visitor_config["server_address"]
+    client.MAX_LENGTH = config["data_max_length"]
+    addr = config["server_address"]
     server_addr = addr["internet_ip"], addr["port"]
-    virtual_port = visitor_config["virtual_open_port"]
-    client.file_log = visitor_config["file_log"]
-    client.debug = visitor_config["debug"]
-    client.file_log = visitor_config["file_log"]
+    virtual_port = config["virtual_open_port"]
+
+    if config["file_log"]:
+        client._log = logging_ex.create_logger("Visitor", "visitor.log")
+    else:
+        client._log = logging_ex.create_logger("Visitor")
+
+    client.log_length = config["console"]["length"]
+    client.log_context = config["console"]["context"]
 
 
 def main():

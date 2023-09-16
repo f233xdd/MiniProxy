@@ -5,8 +5,11 @@
       "internet_ip": "x.x.x.x",
       "port": 25565
     },
-    "file_log": false,
-    "debug": false
+    "file_log": true,
+    "console": {
+      "length": true,
+      "context": true
+    }
   },
   "visitor": {
     "data_max_length": 2097152,
@@ -15,8 +18,11 @@
       "port": 25566
     },
     "virtual_open_port": 25566,
-    "file_log": false,
-    "debug": false
+    "file_log": true,
+    "console": {
+      "length": true,
+      "context": true
+    }
   },
   "stress_test": {
     "data_max_length": 128,

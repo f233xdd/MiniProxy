@@ -5,6 +5,8 @@ import json
 import host_client
 import client
 
+import logging_ex
+
 server_addr: tuple[str, int] = ('', -1)
 
 
@@ -13,15 +15,19 @@ def init():
     global server_addr
 
     file = open("config.json")
-    host_config = json.load(file)["host"]
+    config = json.load(file)["host"]
 
-    client.MAX_LENGTH = host_config["data_max_length"]
-    addr = host_config["server_address"]
+    client.MAX_LENGTH = config["data_max_length"]
+    addr = config["server_address"]
     server_addr = addr["internet_ip"], addr["port"]
-    client.file_log = host_config["file_log"]
-    client.debug = host_config["debug"]
-    client.file_log = host_config["file_log"]
 
+    if config["file_log"]:
+        client._log = logging_ex.create_logger("Host", "host.log")
+    else:
+        client._log = logging_ex.create_logger("Host")
+
+    client.log_length = config["console"]["length"]
+    client.log_context = config["console"]["context"]
 
 def main():
     init()

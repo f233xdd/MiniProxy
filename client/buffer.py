@@ -1,18 +1,27 @@
 class Buffer(object):
 
-    def __init__(self):
-        self._max_size: int = -1
+    def __init__(self, static: bool = False, max_size: int | None = None):
+        self._static: bool = static
+
+        if max_size is not None:
+            self._max_size: int | None = max_size
+        else:
+            self._max_size: int | None = -1
+
         self._data_queue: list[bytes] = []
         self._data_len: int = 0
 
     def set_length(self, length: int) -> None:
         """set the size of the buffer if it is empty"""
-        if self.is_empty and length > 0:
-            self._max_size = length
-        elif length <= 0:
-            raise ValueError(f"unexpected length: {length}")
+        if not self._static:
+            if self.is_empty and (length > 0 or length == -1):
+                self._max_size = length
+            elif length <= 0:
+                raise ValueError(f"unexpected length: {length}")
+            else:
+                raise RuntimeError("data queue is not empty")
         else:
-            raise RuntimeError("data queue is not empty")
+            raise ValueError("Static buffer changed length.")
 
     def put(self, data: bytes, errors: str = "strict") -> bytes | None:
         """put data in the buffer and mark its length"""
@@ -46,7 +55,7 @@ class Buffer(object):
             self._data_queue.clear()
 
             if reset_len:
-                self._max_size = -1
+                self.set_length(-1)
 
             return data
 

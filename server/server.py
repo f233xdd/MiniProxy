@@ -53,7 +53,6 @@ class Server(object):
 
         self._ip = {'ip': f"{host}:{port}"}
         self._port = port  # work as a port and a queue flag
-        self._cache: bytes | None = None  # TODO: store data which is not sent yet(NEED IT?)
 
         self._data_queue.add_flag(port)
 
