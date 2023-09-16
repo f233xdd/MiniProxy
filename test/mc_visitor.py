@@ -33,21 +33,24 @@ def send():
 
 
 def recv():
-    i = 0
-    while True:
-        recv_data = client.recv(MAX_LENGTH + 8)
-        recv_time = time.time()
+    try:
+        i = 0
+        while True:
+            recv_data = client.recv(MAX_LENGTH + 8)
+            recv_time = time.time()
 
-        if recv_data != b"END":
-            offset = check(recv_data[:MAX_LENGTH], bag)
-            print(recv_data[MAX_LENGTH:], len(recv_data))
-            send_time = struct.unpack('d', recv_data[MAX_LENGTH:])[0]
-            delay = round(recv_time - send_time, 3) * 1000
+            if recv_data != b"END":
+                offset = check(recv_data[:MAX_LENGTH], bag)
+                print(len(recv_data))
+                send_time = struct.unpack('d', recv_data[MAX_LENGTH:])[0]
+                delay = round(recv_time - send_time, 3) * 1000
 
-            print(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
-            i += 1
-        else:
-            break
+                print(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
+                i += 1
+            else:
+                break
+    except:
+        print(recv_data)
 
 
 def init():

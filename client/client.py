@@ -59,11 +59,18 @@ class Client(object):
                     if self._data_buf.is_empty and self._data_buf.size == -1:
                         if not self._header_buf.is_empty:
                             data = self._header_buf.put(data, errors="return")
-                            self._data_buf.set_length(struct.unpack('i', self._header_buf.get())[0])
+
+                            length = struct.unpack('i', data[:4])[0]
+                            self._data_buf.set_length(length)
+                            log.debug(f"Set length: {length}")
+
                             data = self._data_buf.put(data, errors="return")
 
                         else:
-                            self._data_buf.set_length(struct.unpack('i', data[:4])[0])
+                            length = struct.unpack('i', data[:4])[0]
+                            self._data_buf.set_length(length)
+                            log.debug(f"Set length: {length}")
+
                             data = data[4:]
                             data = self._data_buf.put(data, errors="return")
 
@@ -76,12 +83,12 @@ class Client(object):
                         if data:
                             msg = ""
                             if log_length:
-                                msg = "".join([msg, f"[{len(data)}]"])
+                                msg = "".join([msg, f"[{len(d)}]"])
                             if log_context:
                                 if msg:
-                                    msg = "".join([msg, ' ', str(data)])
+                                    msg = "".join([msg, ' ', str(d)])
                                 else:
-                                    msg = data
+                                    msg = d
                             if msg:
                                 log.debug(f"Put {msg}")
 
@@ -104,12 +111,12 @@ class Client(object):
                             if data:
                                 msg = ""
                                 if log_length:
-                                    msg = "".join([msg, f"[{len(data)}]"])
+                                    msg = "".join([msg, f"[{len(d)}]"])
                                 if log_context:
                                     if msg:
-                                        msg = "".join([msg, ' ', str(data)])
+                                        msg = "".join([msg, ' ', str(d)])
                                     else:
-                                        msg = data
+                                        msg = d
                                 if msg:
                                     log.debug(f"Put {msg}")
 
@@ -120,8 +127,7 @@ class Client(object):
         while True:
             data = self._data_queue_1.get()
             if data:
-                self._server.send(struct.pack('i', len(data)))
-                self._server.sendall(data)
+                self._server.sendall(struct.pack('i', len(data)) + data)
 
                 if data:
                     msg = ""
