@@ -24,3 +24,5 @@ def create_logger(name, log_file: str = ""):
         with open(log_file, mode='a+', encoding='utf_8') as log_file:
             log_file.write("===================================LOG START===================================\n")
         _log.addHandler(_file_handler)
+
+    return _log

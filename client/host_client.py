@@ -6,7 +6,7 @@ import logging
 
 import client
 
-_log = client._log
+log: logging.Logger | None = None
 
 
 class HostClient(client.Client):
@@ -23,9 +23,9 @@ class HostClient(client.Client):
         self._virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self._virtual_client.connect((socket.gethostname(), self._me_port))
-            _log.info("Mc connected")
+            log.info("Mc connected")
         except ConnectionError as error:
-            _log.error(f"Error: failed to connect with mc({error})")
+            log.error(f"Error: failed to connect with mc({error})")
             raise
 
     def __send_java_data(self):
@@ -40,23 +40,32 @@ class HostClient(client.Client):
                 except queue.Empty:
                     if self._get_func_alive is False:
                         self._send_func_alive = False
-                        _log.warning("__send_java_data is down for get func(timeout)")
+                        log.warning("__send_java_data is down for get func(timeout)")
                         break
                     else:
                         continue
 
                 if self._get_func_alive is False:
                     self._send_func_alive = False
-                    _log.warning("__send_java_data is down for get func")
+                    log.warning("__send_java_data is down for get func")
                     break
 
                 self._virtual_client.sendall(data)
 
                 if data:
-                    _log.debug(data)
+                    msg = ""
+                    if client.log_length:
+                        msg = "".join([msg, f"[{len(data)}]"])
+                    if client.log_context:
+                        if msg:
+                            msg = "".join([msg, ' ', str(data)])
+                        else:
+                            msg = data
+                    if msg:
+                        log.debug(msg)
 
         except ConnectionError as error:
-            _log.error(f"{error} from send_java_data")
+            log.error(f"{error} from send_java_data")
             self._send_func_alive = False
 
     def __get_local_data(self):
@@ -70,23 +79,32 @@ class HostClient(client.Client):
                 except TimeoutError:
                     if self._send_func_alive is False:
                         self._get_func_alive = False
-                        _log.warning("__get_local_data is down for send func(timeout)")
+                        log.warning("__get_local_data is down for send func(timeout)")
                         break
                     else:
                         continue
 
                 if self._send_func_alive is False:
                     self._get_func_alive = False
-                    _log.warning("__get_local_data is down for send func")
+                    log.warning("__get_local_data is down for send func")
                     break
 
                 self._data_queue_1.put(data)
 
                 if data:
-                    _log.debug(data)
+                    msg = ""
+                    if client.log_length:
+                        msg = "".join([msg, f"[{len(data)}]"])
+                    if client.log_context:
+                        if msg:
+                            msg = "".join([msg, ' ', str(data)])
+                        else:
+                            msg = data
+                    if msg:
+                        log.debug(msg)
 
         except ConnectionError as error:
-            _log.error(f"{error} from send_java_data")
+            log.error(f"{error} from send_java_data")
             self._get_func_alive = False
 
     def virtual_client_main(self):  # FIXME: can not run properly
@@ -106,6 +124,6 @@ class HostClient(client.Client):
 
             self._virtual_client.settimeout(None)
 
-            _log.info("Virtual client is down!")
+            log.info("Virtual client is down!")
             input('type [ENTER] to restart> ')
-            _log.info("Virtual client restart...")
+            log.info("Virtual client restart...")

@@ -22,12 +22,17 @@ def init():
     server_addr = addr["internet_ip"], addr["port"]
 
     if config["file_log"]:
-        client._log = logging_ex.create_logger("Host", "host.log")
+        logger = logging_ex.create_logger("Host", "host.log")
+        client.log = logger
+        host_client.log = logger
     else:
-        client._log = logging_ex.create_logger("Host")
+        logger = logging_ex.create_logger("Host")
+        client.log = logger
+        host_client.log = logger
 
     client.log_length = config["console"]["length"]
     client.log_context = config["console"]["context"]
+
 
 def main():
     init()

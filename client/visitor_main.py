@@ -24,9 +24,13 @@ def init():
     virtual_port = config["virtual_open_port"]
 
     if config["file_log"]:
-        client._log = logging_ex.create_logger("Visitor", "visitor.log")
+        logger = logging_ex.create_logger("Visitor", "visitor.log")
+        client.log = logger
+        visitor_client.log = logger
     else:
-        client._log = logging_ex.create_logger("Visitor")
+        logger = logging_ex.create_logger("Visitor")
+        client.log = logger
+        visitor_client.log = logger
 
     client.log_length = config["console"]["length"]
     client.log_context = config["console"]["context"]
