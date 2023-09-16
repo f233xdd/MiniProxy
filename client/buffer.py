@@ -87,4 +87,4 @@ class Buffer(object):
 
     def __repr__(self):
         """return buffer data for debug"""
-        return b"".join(self._data_queue)
+        return str(b"".join(self._data_queue))

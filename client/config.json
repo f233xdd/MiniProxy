@@ -2,7 +2,7 @@
   "host": {
     "data_max_length": 2097152,
     "server_address": {
-      "internet_ip": "43.228.38.117",
+      "internet_ip": "",
       "port": 25565
     },
     "file_log": true,
@@ -14,7 +14,7 @@
   "visitor": {
     "data_max_length": 2097152,
     "server_address": {
-      "internet_ip": "43.228.38.117",
+      "internet_ip": "",
       "port": 25566
     },
     "virtual_open_port": 25566,

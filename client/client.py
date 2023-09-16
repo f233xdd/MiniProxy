@@ -127,7 +127,8 @@ class Client(object):
         while True:
             data = self._data_queue_1.get()
             if data:
-                self._server.sendall(struct.pack('i', len(data)) + data)
+                data = b"".join([struct.pack('i', len(data)), data])
+                self._server.sendall(data)
 
                 if data:
                     msg = ""
