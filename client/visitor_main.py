@@ -35,6 +35,9 @@ def init():
     client.log_length = config["console"]["length"]
     client.log_context = config["console"]["context"]
 
+    client.recv_data_log = open("visitor.recv_data", 'wb')
+    client.send_data_log = open("visitor.send_data", 'wb')
+
 
 def main():
     init()

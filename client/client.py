@@ -2,8 +2,10 @@ import queue
 import socket
 import logging
 import struct
+from io import BufferedWriter
 
 import buffer
+import logging_ex
 
 MAX_LENGTH: int = -1
 
@@ -11,6 +13,8 @@ MAX_LENGTH: int = -1
 log_length = None
 log_context = None
 log: logging.Logger | None = None
+recv_data_log: BufferedWriter | None = None
+send_data_log: BufferedWriter | None = None
 
 
 class Client(object):
@@ -42,17 +46,10 @@ class Client(object):
         while True:
             data = self._server.recv(MAX_LENGTH)
 
-            if data:
-                msg = ""
-                if log_length:
-                    msg = "".join([msg, f"[{len(data)}]"])
-                if log_context:
-                    if msg:
-                        msg = "".join([msg, ' ', str(data)])
-                    else:
-                        msg = data
-                if msg:
-                    log.debug(f"All {msg}")
+            logging_ex.log_debug_msg(d, log, log_context, log_length, add_msg="All")
+
+            recv_data_log.write(data)
+            recv_data_log.write(b'\n')
 
             while data:
                 if len(data) >= 4:
@@ -80,17 +77,7 @@ class Client(object):
                     if self._data_buf.is_full:
                         d = self._data_buf.get(reset_len=True)
 
-                        if data:
-                            msg = ""
-                            if log_length:
-                                msg = "".join([msg, f"[{len(d)}]"])
-                            if log_context:
-                                if msg:
-                                    msg = "".join([msg, ' ', str(d)])
-                                else:
-                                    msg = d
-                            if msg:
-                                log.debug(f"Put {msg}")
+                        logging_ex.log_debug_msg(d, log, log_context, log_length, add_msg="Put")
 
                         self._data_queue_2.put(d)
 
@@ -108,17 +95,7 @@ class Client(object):
                         if self._data_buf.is_full:
                             d = self._data_buf.get(reset_len=True)
 
-                            if data:
-                                msg = ""
-                                if log_length:
-                                    msg = "".join([msg, f"[{len(d)}]"])
-                                if log_context:
-                                    if msg:
-                                        msg = "".join([msg, ' ', str(d)])
-                                    else:
-                                        msg = d
-                                if msg:
-                                    log.debug(f"Put {msg}")
+                            logging_ex.log_debug_msg(d, log, log_context, log_length, add_msg="Put")
 
                             self._data_queue_2.put(d)
 
@@ -130,14 +107,7 @@ class Client(object):
                 data = b"".join([struct.pack('i', len(data)), data])
                 self._server.sendall(data)
 
-                if data:
-                    msg = ""
-                    if log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-                    if msg:
-                        log.debug(msg)
+                logging_ex.log_debug_msg(data, log, log_context, log_length)
+
+                send_data_log.write(data)
+                send_data_log.write(b'\n')

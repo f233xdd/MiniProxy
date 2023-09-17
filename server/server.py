@@ -6,6 +6,7 @@ import threading
 import logging
 
 import queue_ex
+import logging_ex
 
 #  log config
 file_log: bool = True
@@ -94,19 +95,9 @@ class Server(object):
             while True:
                 data = self._client.recv(MAX_LENGTH)
 
+                logging_ex.log_debug_msg(data, _log, log_length, log_context, extra=self._ip)
+
                 if data:
-                    msg = ""
-                    if log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-
-                    if msg:
-                        _log.debug(msg, extra=self._ip)
-
                     self._data_queue.put(data, self._port, exchange=True)
 
         except ConnectionError as e:
@@ -137,18 +128,7 @@ class Server(object):
 
                 self._client.sendall(data)
 
-                if data:
-                    msg = ""
-                    if log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-
-                    if msg:
-                        _log.debug(msg, extra=self._ip)
+                logging_ex.log_debug_msg(data, _log, log_length, log_context, extra=self._ip)
 
         except BrokenPipeError:
             _log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self._ip)

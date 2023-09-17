@@ -5,6 +5,7 @@ import threading
 import logging
 
 import client
+import logging_ex
 
 log: logging.Logger | None = None
 
@@ -52,17 +53,7 @@ class HostClient(client.Client):
 
                 self._virtual_client.sendall(data)
 
-                if data:
-                    msg = ""
-                    if client.log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if client.log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-                    if msg:
-                        log.debug(msg)
+                logging_ex.log_debug_msg(data, log, client.log_context, client.log_length)
 
         except ConnectionError as error:
             log.error(f"{error} from send_java_data")
@@ -91,17 +82,7 @@ class HostClient(client.Client):
 
                 self._data_queue_1.put(data)
 
-                if data:
-                    msg = ""
-                    if client.log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if client.log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-                    if msg:
-                        log.debug(msg)
+                logging_ex.log_debug_msg(data, log, client.log_context, client.log_length)
 
         except ConnectionError as error:
             log.error(f"{error} from send_java_data")
@@ -112,7 +93,6 @@ class HostClient(client.Client):
 
         while True:
             self.__connect_mc_server()
-            self._virtual_client.settimeout(2)
 
             threads = [threading.Thread(target=func) for func in functions]
 
@@ -121,8 +101,6 @@ class HostClient(client.Client):
 
             for thd in threads:
                 thd.join()
-
-            self._virtual_client.settimeout(None)
 
             log.info("Virtual client is down!")
             input('type [ENTER] to restart> ')

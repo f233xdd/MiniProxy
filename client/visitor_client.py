@@ -5,6 +5,7 @@ import threading
 import logging
 
 import client
+import logging_ex
 
 log: logging.Logger | None = None
 
@@ -64,17 +65,7 @@ class VisitClient(client.Client):
 
                 self._mc_client.sendall(data)
 
-                if data:
-                    msg = ""
-                    if client.log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if client.log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-                    if msg:
-                        log.debug(msg)
+                logging_ex.log_debug_msg(data, log, client.log_context, client.log_length)
 
         except ConnectionError as error:
             log.error(f"{error} from send_java_data")
@@ -102,17 +93,7 @@ class VisitClient(client.Client):
 
                 self._data_queue_1.put(data)
 
-                if data:
-                    msg = ""
-                    if client.log_length:
-                        msg = "".join([msg, f"[{len(data)}]"])
-                    if client.log_context:
-                        if msg:
-                            msg = "".join([msg, ' ', str(data)])
-                        else:
-                            msg = data
-                    if msg:
-                        log.debug(msg)
+                logging_ex.log_debug_msg(data, log, client.log_context, client.log_length)
 
         except ConnectionError as error:
             log.error(f"{error} from send_java_data")
@@ -123,7 +104,6 @@ class VisitClient(client.Client):
 
         while True:
             self.__connect_mc_client()
-            self._mc_client.settimeout(2)
 
             threads = [threading.Thread(target=func) for func in functions]
 
@@ -133,5 +113,4 @@ class VisitClient(client.Client):
             for thd in threads:
                 thd.join()
 
-            self._mc_client.settimeout(None)
             log.info("Virtual server is down, restart...")
