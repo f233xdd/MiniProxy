@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from typing import Mapping
+
 
 def create_logger(name, log_file: str = ""):
     _format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"

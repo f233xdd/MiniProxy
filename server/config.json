@@ -8,9 +8,8 @@
     ]
   },
   "file_log": true,
-  "debug": {
-    "global": true,
+  "console": {
     "length": true,
-    "context": false
+    "context": true
   }
 }

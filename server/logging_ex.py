@@ -1,10 +1,10 @@
 import logging
 import sys
 
-from typing import *
+from typing import Mapping
 
 
-def create_logger(name, log_file: str = ""):
+def create_logger(name, log_file: str | None = None):
     _format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
     _format_time = "%H:%M:%S"
 

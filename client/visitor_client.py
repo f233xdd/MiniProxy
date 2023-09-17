@@ -1,4 +1,4 @@
-# the part which connected with Minecraft
+# the part connected with Minecraft
 import queue
 import socket
 import threading

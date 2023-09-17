@@ -3,6 +3,7 @@ import threading
 import json
 
 import server
+import logging_ex
 
 server_ip: str = ""
 open_ports: list = []
@@ -13,14 +14,18 @@ def init():
     #  load json file
     json_file = open("config.json")
     config = json.load(json_file)
-    #  quick set up
+    # set up
     server.MAX_LENGTH = config["data_max_length"]
     server_ip = config["local_address"]["private_ip"]
     open_ports = config["local_address"]["ports"]
-    server.file_log = config["file_log"]
-    server.debug = config["debug"]["global"]
-    server.log_length = config["debug"]["length"]
-    server.log_context = config["debug"]["context"]
+    # init log settings
+    if config["file_log"]:
+        server._log = logging_ex.create_logger("Server", "server.log")
+    else:
+        server._log = logging_ex.create_logger("Sever")
+
+    server.log_length = config["console"]["length"]
+    server.log_context = config["console"]["context"]
 
 
 def main():

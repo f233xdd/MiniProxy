@@ -1,3 +1,4 @@
+# the part connected with a server
 import queue
 import socket
 import logging
@@ -7,11 +8,11 @@ from io import BufferedWriter
 import buffer
 import logging_ex
 
-MAX_LENGTH: int = -1
+MAX_LENGTH: int | None = None
 
 #  log config
-log_length = None
-log_context = None
+log_length: bool | None = None
+log_context: bool | None = None
 log: logging.Logger | None = None
 recv_data_log: BufferedWriter | None = None
 send_data_log: BufferedWriter | None = None
@@ -46,7 +47,7 @@ class Client(object):
         while True:
             data = self._server.recv(MAX_LENGTH)
 
-            logging_ex.log_debug_msg(d, log, log_context, log_length, add_msg="All")
+            logging_ex.log_debug_msg(data, log, log_context, log_length, add_msg="All")
 
             recv_data_log.write(data)
             recv_data_log.write(b'\n')

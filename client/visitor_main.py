@@ -7,8 +7,8 @@ import client
 
 import logging_ex
 
-server_addr: tuple[str, int] = ('', -1)
-virtual_port: int = -1
+server_addr: tuple[str | None, int | None] = (None, None)
+virtual_port: int | None = None
 
 
 def init():
