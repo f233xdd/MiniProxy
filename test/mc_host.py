@@ -3,7 +3,7 @@ import threading
 import time
 import struct
 
-import logging
+import log
 
 data: bytes = (
     b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\x23\x24\x25\x26"
@@ -11,8 +11,9 @@ data: bytes = (
     b"\x53\x54\x55\x56\x57\x58\x59\x60\x61\x62\x63"
 )
 
-MAX_LENGTH = 128
+MAX_LENGTH = 32768
 addr = (socket.gethostname(), 25565)
+_log = log.create_logger("MC_host", log_file="mc_host.log")
 
 
 def check(recv_data: bytes, complete: bytes) -> float:
@@ -43,16 +44,16 @@ def recv():
 
             if recv_data != b"END":
                 offset = check(recv_data[:MAX_LENGTH], bag)
-                print(len(recv_data))
+                _log.debug(len(recv_data))
                 send_time = struct.unpack('d', recv_data[MAX_LENGTH:])[0]
                 delay = round(recv_time - send_time, 3) * 1000
 
-                print(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
+                _log.info(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
                 i += 1
             else:
                 break
     except:
-        print(recv_data)
+        _log.error(recv_data)
 
 
 def init():

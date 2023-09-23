@@ -1,6 +1,6 @@
 {
   "host": {
-    "data_max_length": 32768,
+    "data_max_length": 99999999,
     "server_address": {
       "internet_ip": "",
       "port": 25565
@@ -14,7 +14,7 @@
     }
   },
   "visitor": {
-    "data_max_length": 32768,
+    "data_max_length": 99999999,
     "server_address": {
       "internet_ip": "",
       "port": 25566
