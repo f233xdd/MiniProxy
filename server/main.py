@@ -19,13 +19,13 @@ def init():
     server_ip = config["local_address"]["private_ip"]
     open_ports = config["local_address"]["ports"]
     # init log settings
-    if config["file_log"]:
-        server._log = logging_ex.create_logger("Server", "server.log")
+    if config["debug"]["file_log"]:
+        server.log = logging_ex.create_logger("Server", "server.log")
     else:
-        server._log = logging_ex.create_logger("Sever")
+        server.log = logging_ex.create_logger("Sever")
 
-    server.log_length = config["console"]["length"]
-    server.log_context = config["console"]["context"]
+    server.log_length = config["debug"]["console"]["length"]
+    server.log_content = config["debug"]["console"]["content"]
 
 
 def main():

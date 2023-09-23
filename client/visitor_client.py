@@ -65,7 +65,9 @@ class VisitClient(client.Client):
 
                 self._mc_client.sendall(data)
 
-                logging_ex.log_debug_msg(data, log, client.log_context, client.log_length)
+                msg = logging_ex.debug_msg(data, client.log_content, client.log_length)
+                if msg:
+                    log.debug(msg)
 
         except ConnectionError as error:
             log.error(f"{error} from send_java_data")
@@ -93,13 +95,15 @@ class VisitClient(client.Client):
 
                 self._data_queue_1.put(data)
 
-                logging_ex.log_debug_msg(data, log, client.log_context, client.log_length)
+                msg = logging_ex.debug_msg(data, client.log_content, client.log_length)
+                if msg:
+                    log.debug(msg)
 
         except ConnectionError as error:
             log.error(f"{error} from send_java_data")
             self._get_func_alive = False
 
-    def virtual_server_main(self):  # FIXME: can not run properly
+    def virtual_server_main(self):
         functions = [self.__send_java_data, self.__get_local_data]
 
         while True:

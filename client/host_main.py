@@ -21,7 +21,7 @@ def init():
     addr = config["server_address"]
     server_addr = addr["internet_ip"], addr["port"]
 
-    if config["file_log"]:
+    if config["debug"]["file_log"]:
         logger = logging_ex.create_logger("Host", "host.log")
         client.log = logger
         host_client.log = logger
@@ -30,8 +30,8 @@ def init():
         client.log = logger
         host_client.log = logger
 
-    client.log_length = config["console"]["length"]
-    client.log_context = config["console"]["context"]
+    client.log_length = config["debug"]["console"]["length"]
+    client.log_content = config["debug"]["console"]["content"]
 
     client.recv_data_log = open("host.recv_data", 'wb')
     client.send_data_log = open("host.send_data", 'wb')

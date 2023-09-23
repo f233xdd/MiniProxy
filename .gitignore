@@ -7,3 +7,4 @@
 *.pyi
 *.log
 test.py
+client/config.json

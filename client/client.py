@@ -12,7 +12,7 @@ MAX_LENGTH: int | None = None
 
 #  log config
 log_length: bool | None = None
-log_context: bool | None = None
+log_content: bool | None = None
 log: logging.Logger | None = None
 recv_data_log: BufferedWriter | None = None
 send_data_log: BufferedWriter | None = None
@@ -47,7 +47,9 @@ class Client(object):
         while True:
             data = self._server.recv(MAX_LENGTH)
 
-            logging_ex.log_debug_msg(data, log, log_context, log_length, add_msg="All")
+            msg = logging_ex.debug_msg(data, log_content, log_length, add_msg="All")
+            if msg:
+                log.debug(msg)
 
             recv_data_log.write(data)
             recv_data_log.write(b'\n')
@@ -78,7 +80,9 @@ class Client(object):
                     if self._data_buf.is_full:
                         d = self._data_buf.get(reset_len=True)
 
-                        logging_ex.log_debug_msg(d, log, log_context, log_length, add_msg="Put")
+                        msg = logging_ex.debug_msg(d, log_content, log_length, add_msg="Put")
+                        if msg:
+                            log.debug(msg)
 
                         self._data_queue_2.put(d)
 
@@ -96,7 +100,9 @@ class Client(object):
                         if self._data_buf.is_full:
                             d = self._data_buf.get(reset_len=True)
 
-                            logging_ex.log_debug_msg(d, log, log_context, log_length, add_msg="Put")
+                            msg = logging_ex.debug_msg(d, log_content, log_length, add_msg="Put")
+                            if msg:
+                                log.debug(msg)
 
                             self._data_queue_2.put(d)
 
@@ -108,7 +114,9 @@ class Client(object):
                 data = b"".join([struct.pack('i', len(data)), data])
                 self._server.sendall(data)
 
-                logging_ex.log_debug_msg(data, log, log_context, log_length)
+                msg = logging_ex.debug_msg(data, log_content, log_length)
+                if msg:
+                    log.debug(msg)
 
                 send_data_log.write(data)
                 send_data_log.write(b'\n')

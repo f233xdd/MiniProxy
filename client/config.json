@@ -1,35 +1,31 @@
 {
   "host": {
-    "data_max_length": 2097152,
+    "data_max_length": 32768,
     "server_address": {
       "internet_ip": "",
       "port": 25565
     },
-    "file_log": true,
-    "console": {
-      "length": true,
-      "context": true
+    "debug": {
+      "file_log": true,
+      "console": {
+        "length": true,
+        "content": true
+      }
     }
   },
   "visitor": {
-    "data_max_length": 2097152,
+    "data_max_length": 32768,
     "server_address": {
       "internet_ip": "",
       "port": 25566
     },
     "virtual_open_port": 25566,
-    "file_log": true,
-    "console": {
-      "length": true,
-      "context": true
+    "debug": {
+      "file_log": true,
+      "console": {
+        "length": true,
+        "content": true
+      }
     }
-  },
-  "stress_test": {
-    "data_max_length": 128,
-    "server_address": {
-      "internet_ip": "127.0.0.1",
-      "port": 9999
-    },
-    "mode": "send"
   }
 }

@@ -1,19 +1,5 @@
 import queue
-import logging
-import sys
 import typing
-
-_format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
-_format_time = "%H:%M:%S"
-_formatter = logging.Formatter(_format_msg, _format_time)
-
-_console = logging.StreamHandler(sys.stdout)
-_console.setFormatter(_formatter)
-_console.setLevel(logging.ERROR)
-
-_log = logging.getLogger("QueueLog")
-_log.addHandler(_console)
-_log.setLevel(logging.ERROR)
 
 
 class DoubleQueue(object):
@@ -34,7 +20,7 @@ class DoubleQueue(object):
             self._flag_2 = flag
 
         else:
-            _log.error("MemoryError: Got more than two flags.")
+            raise MemoryError("Got more than two flags.")
 
     def put(self, data, flag: int, exchange: bool = False, block: bool = True, timeout: float | None = None) -> None:
         if flag == self._flag_1:
@@ -50,8 +36,7 @@ class DoubleQueue(object):
                 self._queue_2.put(data, block=block, timeout=timeout)
 
         else:
-            _log.error("ValueError: flag number is not correct.")
-            _log.debug(f"_sign_1: {self._flag_1}, _sign_2: {self._flag_2}, input_sign: {flag}.")
+            raise ValueError("flag number is not correct.")
 
     def get(self, flag: int, exchange: bool = False, block: bool = True, timeout: float | None = None) -> typing.Any:
         if flag == self._flag_1:
@@ -67,8 +52,7 @@ class DoubleQueue(object):
                 return self._queue_2.get(block=block, timeout=timeout)
 
         else:
-            _log.error("ValueError: flag number is not correct.")
-            _log.debug(f"_sign_1: {self._flag_1}, _sign_2: {self._flag_2}, input_sign: {flag}.")
+            raise ValueError("flag number is not correct.")
 
     def empty(self, flag, exchange: bool = False) -> bool:
         if flag == self._flag_1:
@@ -84,8 +68,7 @@ class DoubleQueue(object):
                 return self._queue_2.empty()
 
         else:
-            _log.error("ValueError: Flag number is not correct.")
-            _log.debug(f"_flag_1: {self._flag_1}, _flag_2: {self._flag_2}, input_flag: {flag}.")
+            raise ValueError("flag number is not correct.")
 
     def get_all(self, flag, exchange: bool = False) -> typing.Generator:
         if flag == self._flag_1:
@@ -105,8 +88,7 @@ class DoubleQueue(object):
                     yield self._queue_2.get()
 
         else:
-            _log.error("ValueError: Flag number is not correct.")
-            _log.debug(f"_flag_1: {self._flag_1}, _flag_2: {self._flag_2}, input_flag: {flag}.")
+            raise ValueError("flag number is not correct.")
 
 
 #  ready to test

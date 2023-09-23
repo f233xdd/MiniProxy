@@ -7,9 +7,11 @@
       null
     ]
   },
-  "file_log": true,
-  "console": {
-    "length": true,
-    "context": true
+  "debug": {
+    "file_log": true,
+    "console": {
+      "length": true,
+      "content": true
+    }
   }
 }
