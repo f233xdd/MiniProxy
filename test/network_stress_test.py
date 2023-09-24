@@ -10,7 +10,7 @@ data: bytes = (
     b"\x53\x54\x55\x56\x57\x58\x59\x60\x61\x62\x63"
 )
 
-config = json.load(open("../client/config.json"))["stress_test"]
+config = json.load(open("../client/client/config.json"))["stress_test"]
 MAX_LENGTH: int = config["data_max_length"]
 ip: str = config["server_address"]["internet_ip"]
 port: int = config["server_address"]["port"]

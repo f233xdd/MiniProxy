@@ -1,5 +1,5 @@
 {
-  "data_max_length": 4096,
+  "data_max_length": 99999999,
   "local_address": {
     "private_ip": "127.0.0.1",
     "ports": [

@@ -2,10 +2,7 @@
 import threading
 import json
 
-import visitor_client
-import client
-
-import logging_ex
+from client import logging_ex, visitor_client, client
 
 server_addr: tuple[str | None, int | None] = (None, None)
 virtual_port: int | None = None
@@ -15,7 +12,7 @@ def init():
     """set up basic config"""
     global server_addr, virtual_port
 
-    file = open("config.json")
+    file = open("client/config.json")
     config = json.load(file)["visitor"]
 
     client.MAX_LENGTH = config["data_max_length"]

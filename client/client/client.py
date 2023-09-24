@@ -5,8 +5,7 @@ import logging
 import struct
 from io import BufferedWriter
 
-import buffer
-import logging_ex
+from . import buffer, logging_ex
 
 MAX_LENGTH: int | None = None
 
@@ -47,12 +46,12 @@ class Client(object):
         while True:
             data = self._server.recv(MAX_LENGTH)
 
-            msg = logging_ex.debug_msg(data, log_content, log_length, add_msg="All")
+            msg = logging_ex.message(data, log_content, log_length, add_msg="All")
             if msg:
                 log.debug(msg)
 
-            recv_data_log.write(data)
-            recv_data_log.write(b'\n')
+            # recv_data_log.write(data)
+            # recv_data_log.write(b'\n')
 
             while data:
                 if len(data) >= 4:
@@ -80,7 +79,7 @@ class Client(object):
                     if self._data_buf.is_full:
                         d = self._data_buf.get(reset_len=True)
 
-                        msg = logging_ex.debug_msg(d, log_content, log_length, add_msg="Put")
+                        msg = logging_ex.message(d, log_content, log_length, add_msg="Put")
                         if msg:
                             log.debug(msg)
 
@@ -100,7 +99,7 @@ class Client(object):
                         if self._data_buf.is_full:
                             d = self._data_buf.get(reset_len=True)
 
-                            msg = logging_ex.debug_msg(d, log_content, log_length, add_msg="Put")
+                            msg = logging_ex.message(d, log_content, log_length, add_msg="Put")
                             if msg:
                                 log.debug(msg)
 
@@ -114,9 +113,9 @@ class Client(object):
                 data = b"".join([struct.pack('i', len(data)), data])
                 self._server.sendall(data)
 
-                msg = logging_ex.debug_msg(data, log_content, log_length)
+                msg = logging_ex.message(data, log_content, log_length)
                 if msg:
                     log.debug(msg)
 
-                send_data_log.write(data)
-                send_data_log.write(b'\n')
+                # send_data_log.write(data)
+                # send_data_log.write(b'\n')

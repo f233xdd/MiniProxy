@@ -4,42 +4,29 @@ import socket
 import threading
 import logging
 
-import client
-import logging_ex
+from . import client, logging_ex
 
 log: logging.Logger | None = None
 
 
-class VisitClient(client.Client):
+class HostClient(client.Client):
 
-    def __init__(self, server_addr: tuple[str, int], virtual_server_port: int):
+    def __init__(self, server_addr: tuple[str, int], mc_port: int):
         super().__init__(server_addr)
 
-        self._port = virtual_server_port
-        self._virtual_server: socket.socket
-        self._mc_client: socket.socket
-
+        self._me_port = mc_port
+        self._virtual_client: socket.socket
         self._send_func_alive: bool | None = None
         self._get_func_alive: bool | None = None
 
-        self.__init_virtual_server()
-
-    def __init_virtual_server(self):
-        """initial virtual me server"""
-        self._virtual_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._virtual_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        ip = socket.gethostbyname(socket.gethostname())
-        addr = (ip, self._port)
-        print(f"{ip}:{self._port}\n")
-
-        self._virtual_server.bind(addr)
-        self._virtual_server.listen(1)
-
-    def __connect_mc_client(self):
-        """let mc connect with it as a server"""
-        self._mc_client, __ = self._virtual_server.accept()
-        log.info("Mc connected")
+    def __connect_mc_server(self):
+        self._virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self._virtual_client.connect((socket.gethostname(), self._me_port))
+            log.info("Mc connected")
+        except ConnectionError as error:
+            log.error(f"Error: failed to connect with mc({error})")
+            raise
 
     def __send_java_data(self):
         """send data to java"""
@@ -63,9 +50,9 @@ class VisitClient(client.Client):
                     log.warning("__send_java_data is down for get func")
                     break
 
-                self._mc_client.sendall(data)
+                self._virtual_client.sendall(data)
 
-                msg = logging_ex.debug_msg(data, client.log_content, client.log_length)
+                msg = logging_ex.message(data, client.log_content, client.log_length)
                 if msg:
                     log.debug(msg)
 
@@ -76,10 +63,11 @@ class VisitClient(client.Client):
     def __get_local_data(self):
         """get data from java"""
         self._get_func_alive = True
+
         try:
             while True:
                 try:
-                    data = self._mc_client.recv(client.MAX_LENGTH)
+                    data = self._virtual_client.recv(client.MAX_LENGTH)
                 except TimeoutError:
                     if self._send_func_alive is False:
                         self._get_func_alive = False
@@ -95,7 +83,7 @@ class VisitClient(client.Client):
 
                 self._data_queue_1.put(data)
 
-                msg = logging_ex.debug_msg(data, client.log_content, client.log_length)
+                msg = logging_ex.message(data, client.log_content, client.log_length)
                 if msg:
                     log.debug(msg)
 
@@ -103,11 +91,11 @@ class VisitClient(client.Client):
             log.error(f"{error} from send_java_data")
             self._get_func_alive = False
 
-    def virtual_server_main(self):
+    def virtual_client_main(self):
         functions = [self.__send_java_data, self.__get_local_data]
 
         while True:
-            self.__connect_mc_client()
+            self.__connect_mc_server()
 
             threads = [threading.Thread(target=func) for func in functions]
 
@@ -117,4 +105,6 @@ class VisitClient(client.Client):
             for thd in threads:
                 thd.join()
 
-            log.info("Virtual server is down, restart...")
+            log.info("Virtual client is down!")
+            input('type [ENTER] to restart> ')
+            log.info("Virtual client restart...")

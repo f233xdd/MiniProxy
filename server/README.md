@@ -8,7 +8,6 @@
 * `data_max_length( int )` It decides how much a packet will be sent.
 * `private_ip( str )` It's the Intranet IP of your server.
 * `ports( list[int, int] )` It decides which ports you'll open for connections.
-* `file_log( bool )` What is printed on the console will be kept in a file called ServerLog.log except exceptions.
 
 ### Tips
 

@@ -17,7 +17,7 @@ def create_logger(name, log_file: str = ""):
     log.addHandler(console_handler)
 
     if log_file:
-        _file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+        _file_handler = logging.FileHandler(f".log\\{log_file}", mode='a', encoding='utf-8')
         _file_handler.setFormatter(formatter)
         _file_handler.setLevel(logging.DEBUG)
 
@@ -28,7 +28,7 @@ def create_logger(name, log_file: str = ""):
     return log
 
 
-def debug_msg(data, content: bool, length: bool, add_msg: str | None = None) -> str:
+def message(data, content: bool, length: bool, add_msg: str | None = None) -> str:
     if data:
         msg = ""
 
