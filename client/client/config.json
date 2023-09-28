@@ -6,7 +6,7 @@
       "port": 25565
     },
     "debug": {
-      "file_log": false,
+      "file_log": true,
       "console": {
         "length": true,
         "content": true
@@ -21,7 +21,7 @@
     },
     "virtual_open_port": 25566,
     "debug": {
-      "file_log": false,
+      "file_log": true,
       "console": {
         "length": true,
         "content": true

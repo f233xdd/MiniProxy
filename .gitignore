@@ -1,10 +1,10 @@
 .idea
 .vscode
-./client/conversations/
-./client/test_client/
-./client/virtual_mc/
+client/client/log/
+
 *.pyc
 *.pyi
 *.log
+
 test.py
-client/client/config.json
+
