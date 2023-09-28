@@ -1,4 +1,4 @@
-# run this file to start host client
+# run this file to start your host client
 import threading
 
 import client

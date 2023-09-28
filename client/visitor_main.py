@@ -1,4 +1,4 @@
-# run this file to start visitor client
+# run this file to start your visitor client
 import threading
 
 import client
