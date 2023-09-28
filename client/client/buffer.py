@@ -26,10 +26,8 @@ class Buffer(object):
                 self._size = size
             elif self.is_empty and size > 0:
                 self._size = size
-            elif size <= 0:
-                raise ValueError(f"unexpected length: {size}")
             else:
-                raise RuntimeError("data queue is not empty")
+                raise ValueError(f"unexpected size: {size}")
         else:
             raise ValueError("static buffer changed its size")
 
@@ -81,9 +79,9 @@ class Buffer(object):
     def is_empty(self) -> bool:
         """check if it's empty"""
         if self._data_len:
-            return True
-        else:
             return False
+        else:
+            return True
 
     @property
     def data_length(self) -> int:

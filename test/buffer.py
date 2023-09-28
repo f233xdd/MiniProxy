@@ -22,7 +22,9 @@ class Buffer(object):
     def set_size(self, size: int | None) -> None:
         """set the size of the buffer if it is empty"""
         if not self._static:
-            if self.is_empty and (size > 0 or size is None):
+            if self.is_empty and size is None:
+                self._size = size
+            elif self.is_empty and size > 0:
                 self._size = size
             elif size <= 0:
                 raise ValueError(f"unexpected length: {size}")
@@ -78,7 +80,7 @@ class Buffer(object):
     @property
     def is_empty(self) -> bool:
         """check if it's empty"""
-        if self._data_len:
+        if not self._data_len:
             return True
         else:
             return False
