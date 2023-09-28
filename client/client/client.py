@@ -29,7 +29,7 @@ class Client(object):
         self._server: socket.socket
 
         self._data_buf = buffer.Buffer()
-        self._header_buf = buffer.Buffer(static=True, max_size=4)
+        self._header_buf = buffer.Buffer(static=True, size=4)
 
         self.__create_socket()
 
@@ -55,19 +55,19 @@ class Client(object):
 
             while data:
                 if len(data) >= 4:
-                    if self._data_buf.is_empty and self._data_buf.size == -1:
+                    if self._data_buf.is_empty and self._data_buf.size is None:
                         if not self._header_buf.is_empty:
                             data = self._header_buf.put(data, errors="return")
 
                             length = struct.unpack('i', data[:4])[0]
-                            self._data_buf.set_length(length)
+                            self._data_buf.set_size(length)
                             log.debug(f"Set length: {length}")
 
                             data = self._data_buf.put(data, errors="return")
 
                         else:
                             length = struct.unpack('i', data[:4])[0]
-                            self._data_buf.set_length(length)
+                            self._data_buf.set_size(length)
                             log.debug(f"Set length: {length}")
 
                             data = data[4:]
@@ -77,7 +77,7 @@ class Client(object):
                         data = self._data_buf.put(data, errors="return")
 
                     if self._data_buf.is_full:
-                        d = self._data_buf.get(reset_len=True)
+                        d = self._data_buf.get(reset_size=True)
 
                         msg = logging_ex.message(d, log_content, log_length, add_msg="Put")
                         if msg:
@@ -89,7 +89,7 @@ class Client(object):
                         break
 
                 else:
-                    if self._data_buf.is_empty and self._data_buf.size == -1:
+                    if self._data_buf.is_empty and self._data_buf.size is None:
                         self._header_buf.put(data)
                         data = b''
 
@@ -97,7 +97,7 @@ class Client(object):
                         data = self._data_buf.put(data, errors="return")
 
                         if self._data_buf.is_full:
-                            d = self._data_buf.get(reset_len=True)
+                            d = self._data_buf.get(reset_size=True)
 
                             msg = logging_ex.message(d, log_content, log_length, add_msg="Put")
                             if msg:
