@@ -1,39 +1,13 @@
 #  run this file to start a server
 import threading
-import json
 
-import server
-import logging_ex
-
-server_ip: str = ""
-open_ports: list = []
-
-
-def init():
-    global open_ports, server_ip
-    #  load json file
-    json_file = open("config.json")
-    config = json.load(json_file)
-    # set up
-    server.MAX_LENGTH = config["data_max_length"]
-    server_ip = config["local_address"]["private_ip"]
-    open_ports = config["local_address"]["ports"]
-    # init log settings
-    if config["debug"]["file_log"]:
-        server.log = logging_ex.create_logger("Server", "server.log")
-    else:
-        server.log = logging_ex.create_logger("Sever")
-
-    server.log_length = config["debug"]["console"]["length"]
-    server.log_content = config["debug"]["console"]["content"]
+from server import *
 
 
 def main():
-    init()
-
     print("Initialize ServerPort.", end='... ')
-    server_1 = server.Server(server_ip, open_ports[0])
-    server_2 = server.Server(server_ip, open_ports[1])
+    server_1 = Server(local_addr[0], local_addr[1][0])
+    server_2 = Server(local_addr[0], local_addr[1][1])
     print("Done!")
 
     print("Create threads.", end='... ')

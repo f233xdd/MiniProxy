@@ -4,8 +4,7 @@ import socket
 import threading
 import logging
 
-import queue_ex
-import logging_ex
+from . import logging_ex, queue_ex
 
 #  log config
 log_length: bool | None = None

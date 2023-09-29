@@ -2,11 +2,12 @@
   "host": {
     "data_max_length": 99999999,
     "server_address": {
-      "internet_ip": "",
-      "port": 25565
+      "internet_ip": "127.0.0.1",
+      "port": 9999
     },
     "debug": {
       "file_log": true,
+      "clear_log": false,
       "console": {
         "length": true,
         "content": true
@@ -16,12 +17,13 @@
   "visitor": {
     "data_max_length": 99999999,
     "server_address": {
-      "internet_ip": "",
-      "port": 25566
+      "internet_ip": "127.0.0.1",
+      "port": 9998
     },
     "virtual_open_port": 25566,
     "debug": {
       "file_log": true,
+      "clear_log": false,
       "console": {
         "length": true,
         "content": true
