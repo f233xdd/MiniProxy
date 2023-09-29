@@ -7,8 +7,7 @@ from .visitor_client import VisitClient
 
 from .logging_ex import create_logger
 
-from . import (client, host_client, visitor_client)
-
+from . import client, host_client, visitor_client
 
 server_addr: list[tuple[str, int], tuple[str, int]] = []
 virtual_port: int | None = None
@@ -17,11 +16,14 @@ __all__ = ["Client", "HostClient", "VisitClient",
            "server_addr", "virtual_port",
            "init_host", "init_visitor"]
 
-basic_path = os.getcwd() + "\\client"
-file = open(basic_path + "\\config.json", 'r')
+local_path = os.getcwd() + "\\client"
+file = open(local_path + "\\config.json", 'r')
 config = json.load(file)
 h_config = config["host"]
 v_config = config["visitor"]
+
+if not os.path.exists(local_path + "\\log"):
+    os.mkdir(local_path + "\\log")
 
 
 def init_host():
@@ -34,7 +36,7 @@ def init_host():
     client.log_content = h_config["debug"]["console"]["content"]
 
     if h_config["debug"]["file_log"]:
-        logger = create_logger("Host", basic_path + "\\log\\host.log")
+        logger = create_logger("Host", local_path + "\\log\\host.log")
         client.log = logger
         host_client.log = logger
     else:
@@ -42,8 +44,8 @@ def init_host():
         client.log = logger
         host_client.log = logger
 
-    client.recv_data_log = open(basic_path + "\\log\\host.recv_data", 'wb')
-    client.send_data_log = open(basic_path + "\\log\\host.send_data", 'wb')
+    client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
+    client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
 
 
 def init_visitor():
@@ -59,7 +61,7 @@ def init_visitor():
     client.log_content = v_config["debug"]["console"]["content"]
 
     if v_config["debug"]["file_log"]:
-        logger = create_logger("Visitor", basic_path + "\\log\\visitor.log")
+        logger = create_logger("Visitor", local_path + "\\log\\visitor.log")
         client.log = logger
         visitor_client.log = logger
     else:
@@ -67,5 +69,5 @@ def init_visitor():
         client.log = logger
         visitor_client.log = logger
 
-    client.recv_data_log = open(basic_path + "\\log\\visitor.recv_data", 'wb')
-    client.send_data_log = open(basic_path + "\\log\\visitor.send_data", 'wb')
+    client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
+    client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
