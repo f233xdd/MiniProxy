@@ -3,7 +3,7 @@ import os
 import shutil
 
 from .server import Server
-from .logging_ex import create_logger
+from .tool import get_logger
 
 __all__ = ["Server", "local_addr"]
 
@@ -22,12 +22,11 @@ if not os.path.exists(local_path + "\\log"):
 
 server.MAX_LENGTH = config["data_max_length"]
 local_addr = config["local_address"]["private_ip"], config["local_address"]["ports"]
-print(local_addr)
 
 if config["debug"]["file_log"]:
-    server.log = create_logger("Server", local_path + "\\log\\server.log")
+    server.log = get_logger("Server", local_path + "\\log\\server.log")
 else:
-    server.log = create_logger("Sever")
+    server.log = get_logger("Sever")
 
 server.log_length = config["debug"]["console"]["length"]
 server.log_content = config["debug"]["console"]["content"]

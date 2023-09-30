@@ -4,7 +4,7 @@ import socket
 import threading
 import logging
 
-from . import client, logging_ex
+from . import client, tool
 
 log: logging.Logger | None = None
 
@@ -64,7 +64,7 @@ class VisitClient(client.Client):
 
                 self._mc_client.sendall(data)
 
-                msg = logging_ex.message(data, client.log_content, client.log_length)
+                msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
                     log.debug(msg)
 
@@ -94,7 +94,7 @@ class VisitClient(client.Client):
 
                 self._data_queue_1.put(data)
 
-                msg = logging_ex.message(data, client.log_content, client.log_length)
+                msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
                     log.debug(msg)
 

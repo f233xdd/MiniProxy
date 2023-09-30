@@ -4,7 +4,7 @@ import socket
 import threading
 import logging
 
-from . import logging_ex, queue_ex
+from .tool import queue_ex, logging_ex
 
 #  log config
 log_length: bool | None = None
@@ -67,7 +67,7 @@ class Server(object):
             while True:
                 data = self._client.recv(MAX_LENGTH)
 
-                msg = logging_ex.debug_msg(data, log_content, log_length)
+                msg = logging_ex.message(data, log_content, log_length)
                 if msg:
                     log.debug(msg, extra=self._ip)
 
@@ -102,7 +102,7 @@ class Server(object):
 
                 self._client.sendall(data)
 
-                msg = logging_ex.debug_msg(data, log_content, log_length)
+                msg = logging_ex.message(data, log_content, log_length)
                 if msg:
                     log.debug(msg, extra=self._ip)
 

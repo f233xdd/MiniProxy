@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-def create_logger(name, log_file: str = ''):
+def get_logger(name, log_file: str = ''):
     format_msg = "[%(levelname)s] [%(asctime)s] [%(port)s] [%(funcName)s] %(message)s"
     format_time = "%H:%M:%S"
 
@@ -28,7 +28,7 @@ def create_logger(name, log_file: str = ''):
     return log
 
 
-def debug_msg(data, content: bool, length: bool, add_msg: str | None = None) -> str:
+def message(data, content: bool, length: bool, add_msg: str | None = None) -> str:
     if data:
         msg = ""
 

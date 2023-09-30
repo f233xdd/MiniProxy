@@ -5,7 +5,7 @@ import logging
 import struct
 from io import BufferedWriter
 
-from . import buffer, logging_ex
+from . import tool
 
 MAX_LENGTH: int | None = None
 
@@ -28,8 +28,8 @@ class Client(object):
         self._encoding = 'utf_8'
         self._server: socket.socket
 
-        self._data_buf = buffer.Buffer()
-        self._header_buf = buffer.Buffer(static=True, size=4)
+        self._data_buf = tool.Buffer()
+        self._header_buf = tool.Buffer(static=True, size=4)
 
         self.__create_socket()
 
@@ -46,7 +46,7 @@ class Client(object):
         while True:
             data = self._server.recv(MAX_LENGTH)
 
-            msg = logging_ex.message(data, log_content, log_length, add_msg="All")
+            msg = tool.message(data, log_content, log_length, add_msg="All")
             if msg:
                 log.debug(msg)
 
@@ -79,7 +79,7 @@ class Client(object):
                     if self._data_buf.is_full:
                         d = self._data_buf.get(reset_size=True)
 
-                        msg = logging_ex.message(d, log_content, log_length, add_msg="Put")
+                        msg = tool.message(d, log_content, log_length, add_msg="Put")
                         if msg:
                             log.debug(msg)
 
@@ -99,7 +99,7 @@ class Client(object):
                         if self._data_buf.is_full:
                             d = self._data_buf.get(reset_size=True)
 
-                            msg = logging_ex.message(d, log_content, log_length, add_msg="Put")
+                            msg = tool.message(d, log_content, log_length, add_msg="Put")
                             if msg:
                                 log.debug(msg)
 
@@ -113,7 +113,7 @@ class Client(object):
                 data = b"".join([struct.pack('i', len(data)), data])
                 self._server.sendall(data)
 
-                msg = logging_ex.message(data, log_content, log_length)
+                msg = tool.message(data, log_content, log_length)
                 if msg:
                     log.debug(msg)
 

@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-def create_logger(name, log_file: str = ""):
+def get_logger(name, log_file: str = ""):
     format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
     format_time = "%H:%M:%S"
 

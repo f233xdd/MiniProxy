@@ -1,13 +1,11 @@
 import json
 import os
-import shutil
 
 from .client import Client
 from .host_client import HostClient
 from .visitor_client import VisitClient
 
-from .logging_ex import create_logger
-
+from .tool import get_logger
 
 __all__ = ["Client", "HostClient", "VisitClient",
            "server_addr", "virtual_port",
@@ -45,11 +43,11 @@ def init_host():
             pass
 
     if h_config["debug"]["file_log"]:
-        logger = create_logger("Host", local_path + "\\log\\host.log")
+        logger = get_logger("Host", local_path + "\\log\\host.log")
         client.log = logger
         host_client.log = logger
     else:
-        logger = create_logger("Host")
+        logger = get_logger("Host")
         client.log = logger
         host_client.log = logger
 
@@ -78,11 +76,11 @@ def init_visitor():
             pass
 
     if v_config["debug"]["file_log"]:
-        logger = create_logger("Visitor", local_path + "\\log\\visitor.log")
+        logger = get_logger("Visitor", local_path + "\\log\\visitor.log")
         client.log = logger
         visitor_client.log = logger
     else:
-        logger = create_logger("Visitor")
+        logger = get_logger("Visitor")
         client.log = logger
         visitor_client.log = logger
 
