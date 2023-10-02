@@ -4,11 +4,10 @@ import threading
 import client
 
 
-def main():
+def main(open_port: int):
     client.init_host()
 
-    mc_open_port = int(input("Mc local port: "))
-    host = client.HostClient(client.server_addr[0], mc_open_port)
+    host = client.HostClient(client.server_addr[0], open_port)
 
     functions = [host.send_data, host.get_data, host.virtual_client_main]
 
@@ -19,4 +18,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    mc_open_port = int(input("Mc local port: "))
+    main(mc_open_port)
