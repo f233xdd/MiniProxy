@@ -8,7 +8,6 @@ from .tool import get_logger
 __all__ = ["Server", "local_addr"]
 
 local_path = os.getcwd() + "\\server"
-print(local_path, "**********************************************************")
 local_addr: tuple[str, list[int, int]] | None = None
 
 json_file = open("server/config.json")
