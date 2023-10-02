@@ -8,6 +8,7 @@ from .tool import get_logger
 __all__ = ["Server", "local_addr"]
 
 local_path = os.getcwd() + "\\server"
+print(local_path, "**********************************************************")
 local_addr: tuple[str, list[int, int]] | None = None
 
 json_file = open("server/config.json")
@@ -18,7 +19,6 @@ if config["debug"]["clear_log"]:
 
 if not os.path.exists(local_path + "\\log"):
     os.mkdir(local_path + "\\log")
-
 
 server.MAX_LENGTH = config["data_max_length"]
 local_addr = config["local_address"]["private_ip"], config["local_address"]["ports"]

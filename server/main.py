@@ -1,4 +1,4 @@
-#  run this file to start a server
+# run this file to start a server
 import threading
 
 from server import *
@@ -17,7 +17,7 @@ def main():
 
     thread_1.start()
     thread_2.start()
-    print("Server running!\n")
+    print("Server is running!\n")
 
 
 if __name__ == "__main__":

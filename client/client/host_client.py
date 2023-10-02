@@ -6,7 +6,6 @@ import logging
 
 from . import client, tool
 
-
 log: logging.Logger | None = None
 
 

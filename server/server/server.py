@@ -4,7 +4,7 @@ import socket
 import threading
 import logging
 
-from .tool import queue_ex, logging_ex
+from .tool import DoubleQueue, message
 
 #  log config
 log_length: bool | None = None
@@ -20,7 +20,7 @@ class ClientOffLineError(Exception):
 
 
 class Server(object):
-    _data_queue = queue_ex.DoubleQueue()
+    _data_queue = DoubleQueue()
 
     def __init__(self, host: str, port: int):
 
@@ -67,7 +67,7 @@ class Server(object):
             while True:
                 data = self._client.recv(MAX_LENGTH)
 
-                msg = logging_ex.message(data, log_content, log_length)
+                msg = message(data, log_content, log_length)
                 if msg:
                     log.debug(msg, extra=self._ip)
 
@@ -102,7 +102,7 @@ class Server(object):
 
                 self._client.sendall(data)
 
-                msg = logging_ex.message(data, log_content, log_length)
+                msg = message(data, log_content, log_length)
                 if msg:
                     log.debug(msg, extra=self._ip)
 
