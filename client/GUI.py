@@ -4,6 +4,7 @@ import typing
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+import client
 from host_main import main as h_main
 from visitor_main import main as v_main
 
@@ -44,6 +45,7 @@ class MainWindow(tk.Tk):
 
         self._h_text = Message(self._frame[HOST], xscrollcommand=self._h_bar[tk.X].set,
                                yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80)
+
         self._h_bar[tk.X].config(command=self._h_text.xview)
         self._h_bar[tk.Y].config(command=self._h_text.yview)
 
@@ -54,12 +56,12 @@ class MainWindow(tk.Tk):
 
         self._h_start_button.pack(side=tk.LEFT, padx=60, pady=10)
         self._h_cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
-
+        # visitor frame
         self._v_bar = {
             tk.X: tk.Scrollbar(self._frame[VISITOR], orient=tk.HORIZONTAL),
             tk.Y: tk.Scrollbar(self._frame[VISITOR]),
         }
-        # visitor frame
+
         self._v_bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
         self._v_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -96,41 +98,23 @@ class MainWindow(tk.Tk):
         }
 
         self._title = {
-            HOST: tk.Label(self._frame[OPTION], text="Host options>"),
-            VISITOR: tk.Label(self._frame[OPTION], text="Visitor options>"),
+            "host": tk.Label(self._frame[OPTION], text="Host options>"),
+            "visitor": tk.Label(self._frame[OPTION], text="Visitor options>"),
+            "general": tk.Label(self._frame[OPTION], text="General options>")
         }
 
         self._save = {  # TODO: apply and save inputs
             "apply": tk.Button(self._frame[OPTION], text="Apply",
-                               command=lambda: messagebox.showinfo(title="Info", message="Applied.")),
+                               command=self.__apply_conf),
             "save": tk.Button(self._frame[OPTION], text="Save",
-                              command=lambda: messagebox.showinfo(title="Info", message="Saved."))
+                              command=self.__save_conf)
         }
 
-        self._title[HOST].grid(row=0, column=0)
-        self._title[VISITOR].grid(row=4, column=0)
-
-        self._h_option["open_port"]["label"].grid(row=1, column=0)
-        self._h_option["open_port"]["entry"].grid(row=1, column=1)
-        self._h_option["server_ip"]["label"].grid(row=2, column=0)
-        self._h_option["server_ip"]["entry"].grid(row=2, column=1)
-        self._h_option["server_port"]["label"].grid(row=3, column=0)
-        self._h_option["server_port"]["entry"].grid(row=3, column=1)
-
-        self._v_option["open_port"]["label"].grid(row=5, column=0)
-        self._v_option["open_port"]["entry"].grid(row=5, column=1)
-        self._v_option["server_ip"]["label"].grid(row=6, column=0)
-        self._v_option["server_ip"]["entry"].grid(row=6, column=1)
-        self._v_option["server_port"]["label"].grid(row=7, column=0)
-        self._v_option["server_port"]["entry"].grid(row=7, column=1)
-
-        self._save["apply"].grid(row=10, column=0)
-        self._save["save"].grid(row=10, column=1)
-
+        self.__init_option()
         #  TODO: ensure whether module is installed
-        b = tk.Checkbutton(self._frame[OPTION], text="Cryro",
-                           command=lambda: messagebox.showinfo(title="Info", message="Unavailable"))
-        b.grid(row=9, column=0)
+        self._check_button = tk.Checkbutton(self._frame[OPTION], text="Crypto",
+                                            command=lambda: messagebox.showinfo(title="Info", message="Unavailable"))
+        self._check_button.grid(row=10, column=0)
 
     def show(self):
         def h():
@@ -144,6 +128,76 @@ class MainWindow(tk.Tk):
         threading.Thread(target=h).start()
         threading.Thread(target=v).start()
         self.mainloop()
+
+    def __init_option(self):
+
+        self._title[HOST].grid(row=0, column=0)
+        self._title[VISITOR].grid(row=4, column=0)
+        self._title["general"].grid(row=9, column=0)
+
+        self._h_option["open_port"]["label"].grid(row=1, column=0)
+        self._h_option["open_port"]["entry"].grid(row=1, column=1)
+        self._h_option["open_port"]["entry"].insert(0, client.conf[HOST, "open_port"])
+
+        self._h_option["server_ip"]["label"].grid(row=2, column=0)
+        self._h_option["server_ip"]["entry"].grid(row=2, column=1)
+        self._h_option["server_ip"]["entry"].insert(0, client.conf[HOST, "server_address", "internet_ip"])
+
+        self._h_option["server_port"]["label"].grid(row=3, column=0)
+        self._h_option["server_port"]["entry"].grid(row=3, column=1)
+        self._h_option["server_port"]["entry"].insert(0, client.conf[HOST, "server_address", "port"])
+
+        self._v_option["open_port"]["label"].grid(row=5, column=0)
+        self._v_option["open_port"]["entry"].grid(row=5, column=1)
+        self._v_option["open_port"]["entry"].insert(0, client.conf[VISITOR, "virtual_open_port"])
+
+        self._v_option["server_ip"]["label"].grid(row=6, column=0)
+        self._v_option["server_ip"]["entry"].grid(row=6, column=1)
+        self._v_option["server_ip"]["entry"].insert(0, client.conf[VISITOR, "server_address", "internet_ip"])
+
+        self._v_option["server_port"]["label"].grid(row=7, column=0)
+        self._v_option["server_port"]["entry"].grid(row=7, column=1)
+        self._v_option["server_port"]["entry"].insert(0, client.conf[VISITOR, "server_address", "port"])
+
+
+        self._save["apply"].grid(row=11, column=0)
+        self._save["save"].grid(row=11, column=1)
+
+    def __update_conf(self):
+        value = self._h_option["open_port"]["entry"].get()
+        if value:
+            client.conf.update(value, [HOST, "open_port"])
+
+        value = self._h_option["server_ip"]["entry"].get()
+        if value:
+            client.conf.update(value, [HOST, "server_address", "internet_ip"])
+
+        value = self._h_option["server_port"]["entry"].get()
+        if value:
+            client.conf.update(value, [HOST, "server_address", "port"])
+
+        value = self._v_option["open_port"]["entry"].get()
+        if value:
+            client.conf.update(value, [VISITOR, "virtual_open_port"])
+
+        value = self._v_option["server_ip"]["entry"].get()
+        if value:
+            client.conf.update(value, [VISITOR, "server_address", "internet_ip"])
+
+        value = self._v_option["server_port"]["entry"].get()
+        if value:
+            client.conf.update(value, [VISITOR, "server_address", "port"])
+
+    def __apply_conf(self):
+        self.__update_conf()
+
+        messagebox.showinfo(title="Info", message="Applied.")
+
+    def __save_conf(self):
+        self.__update_conf()
+        client.conf.save()
+
+        messagebox.showinfo(title="Info", message="Saved.")
 
 
 class Message(tk.Listbox):

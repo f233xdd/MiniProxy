@@ -91,8 +91,8 @@ def init_host():
         client.log = logger
         host_client.log = logger
 
-    client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
-    client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
+    # client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
+    # client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
 
 
 def init_visitor():
@@ -124,5 +124,5 @@ def init_visitor():
         client.log = logger
         visitor_client.log = logger
 
-    client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
-    client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
+    # client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
+    # client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
