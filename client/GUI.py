@@ -1,8 +1,8 @@
 import multiprocessing
 import threading
-import tkinter as tk
 import typing
-from tkinter import ttk
+import tkinter as tk
+from tkinter import ttk, messagebox
 
 from host_main import main as h_main
 from visitor_main import main as v_main
@@ -42,14 +42,14 @@ class MainWindow(tk.Tk):
         self._h_bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
         self._h_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
-        self._h_text = MessageBox(self._frame[HOST], xscrollcommand=self._h_bar[tk.X].set,
-                                  yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80)
+        self._h_text = Message(self._frame[HOST], xscrollcommand=self._h_bar[tk.X].set,
+                               yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80)
         self._h_bar[tk.X].config(command=self._h_text.xview)
         self._h_bar[tk.Y].config(command=self._h_text.yview)
 
-        self._h_start_button = tk.Button(self._frame[HOST], text="start",
+        self._h_start_button = tk.Button(self._frame[HOST], text="Start",
                                          command=lambda: self._task_manager.run_task(0))
-        self._h_cancel_button = tk.Button(self._frame[HOST], text="cancel",
+        self._h_cancel_button = tk.Button(self._frame[HOST], text="Cancel",
                                           command=lambda: self._task_manager.cancel_task(0))
 
         self._h_start_button.pack(side=tk.LEFT, padx=60, pady=10)
@@ -63,21 +63,21 @@ class MainWindow(tk.Tk):
         self._v_bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
         self._v_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
-        self._v_text = MessageBox(self._frame[VISITOR], xscrollcommand=self._v_bar[tk.X].set,
-                                  yscrollcommand=self._v_bar[tk.Y].set, height=16, width=80)
+        self._v_text = Message(self._frame[VISITOR], xscrollcommand=self._v_bar[tk.X].set,
+                               yscrollcommand=self._v_bar[tk.Y].set, height=16, width=80)
 
         self._v_bar[tk.X].config(command=self._v_text.xview)
         self._v_bar[tk.Y].config(command=self._v_text.yview)
 
-        self._v_start_button = tk.Button(self._frame[VISITOR], text="start",
+        self._v_start_button = tk.Button(self._frame[VISITOR], text="Start",
                                          command=lambda: self._task_manager.run_task(1))
-        self._v_cancel_button = tk.Button(self._frame[VISITOR], text="cancel",
+        self._v_cancel_button = tk.Button(self._frame[VISITOR], text="Cancel",
                                           command=lambda: self._task_manager.cancel_task(1))
 
         self._v_start_button.pack(side=tk.LEFT, padx=60, pady=10)
         self._v_cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
         # option frame
-        self._h_option = {
+        self._h_option = {  # TODO: get inputs
             "open_port": {"label": tk.Label(self._frame[OPTION], text="Open port"),
                           "entry": tk.Entry(self._frame[OPTION])},
             "server_ip": {"label": tk.Label(self._frame[OPTION], text="Server ip"),
@@ -86,7 +86,7 @@ class MainWindow(tk.Tk):
                             "entry": tk.Entry(self._frame[OPTION])},
         }
 
-        self._v_option = {
+        self._v_option = {  # TODO: get inputs
             "open_port": {"label": tk.Label(self._frame[OPTION], text="Open port"),
                           "entry": tk.Entry(self._frame[OPTION])},
             "server_ip": {"label": tk.Label(self._frame[OPTION], text="Server ip"),
@@ -98,6 +98,13 @@ class MainWindow(tk.Tk):
         self._title = {
             HOST: tk.Label(self._frame[OPTION], text="Host options>"),
             VISITOR: tk.Label(self._frame[OPTION], text="Visitor options>"),
+        }
+
+        self._save = {  # TODO: apply and save inputs
+            "apply": tk.Button(self._frame[OPTION], text="Apply",
+                               command=lambda: messagebox.showinfo(title="Info", message="Applied.")),
+            "save": tk.Button(self._frame[OPTION], text="Save",
+                              command=lambda: messagebox.showinfo(title="Info", message="Saved."))
         }
 
         self._title[HOST].grid(row=0, column=0)
@@ -117,6 +124,14 @@ class MainWindow(tk.Tk):
         self._v_option["server_port"]["label"].grid(row=7, column=0)
         self._v_option["server_port"]["entry"].grid(row=7, column=1)
 
+        self._save["apply"].grid(row=10, column=0)
+        self._save["save"].grid(row=10, column=1)
+
+        #  TODO: ensure whether module is installed
+        b = tk.Checkbutton(self._frame[OPTION], text="Cryro",
+                           command=lambda: messagebox.showinfo(title="Info", message="Unavailable"))
+        b.grid(row=9, column=0)
+
     def show(self):
         def h():
             for i in range(120):
@@ -131,7 +146,7 @@ class MainWindow(tk.Tk):
         self.mainloop()
 
 
-class MessageBox(tk.Listbox):
+class Message(tk.Listbox):
 
     def __init__(self, master, xscrollcommand, yscrollcommand, height, width):
         super().__init__(master=master, xscrollcommand=xscrollcommand, yscrollcommand=yscrollcommand, height=height,
@@ -163,6 +178,7 @@ class TaskManager:
         self._mutex = mutex
 
     def __check_process(self):
+        """clean over processes and update process ticker"""
         for i in range(len(self._tasks)):
             j = 0
             while j < len(self._processes[i]):
@@ -173,6 +189,7 @@ class TaskManager:
                 j += 1
 
     def run_task(self, task: int):
+        """start a process running on the task"""
 
         self.__check_process()
 
@@ -191,6 +208,7 @@ class TaskManager:
             return -1
 
     def cancel_task(self, task: int):
+        """terminate all processes running on the task"""
         if self._tasks[task] != 0:
             for process in self._processes[task]:
                 process.terminate()
