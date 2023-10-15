@@ -2,7 +2,6 @@ import multiprocessing
 import typing
 import tkinter as tk
 from tkinter import ttk, messagebox
-from multiprocessing import Manager
 
 import client
 from host_main import main as h_main
@@ -19,8 +18,14 @@ class MainWindow(tk.Tk):
         super().__init__()
 
         self._task_manager = TaskManager(1, False)
-        self._public_manager = Manager()
-        self._public_dict: dict = self._public_manager.dict()  # TODO: pass it to other processes
+        self._pipe: dict[str:Pipe, str:Pipe] = {
+            HOST: Pipe(),
+            VISITOR: Pipe(),
+        }
+        self._msg: dict[str:tk.StringVar, str:tk.StringVar] = {
+            HOST: tk.StringVar(),
+            VISITOR: tk.StringVar(),
+        }
 
         self.title(title)
         self.geometry(size)
@@ -46,16 +51,16 @@ class MainWindow(tk.Tk):
         self._h_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
         self._h_text = Message(self._frame[HOST], xscrollcommand=self._h_bar[tk.X].set,
-                               yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80)
+                               yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80,
+                               listvariable=self._msg[HOST])
 
         self._task_manager.add_task(h_main)
-        self._public_dict[HOST] = self._h_text
 
         self._h_bar[tk.X].config(command=self._h_text.xview)
         self._h_bar[tk.Y].config(command=self._h_text.yview)
 
         self._h_start_button = tk.Button(self._frame[HOST], text="Start",
-                                         command=lambda: self._task_manager.run_task(0, self._public_dict))
+                                         command=lambda: self._task_manager.run_task(0, self._pipe[HOST]))
         self._h_cancel_button = tk.Button(self._frame[HOST], text="Cancel",
                                           command=lambda: self._task_manager.cancel_task(0))
 
@@ -71,16 +76,16 @@ class MainWindow(tk.Tk):
         self._v_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
         self._v_text = Message(self._frame[VISITOR], xscrollcommand=self._v_bar[tk.X].set,
-                               yscrollcommand=self._v_bar[tk.Y].set, height=16, width=80)
+                               yscrollcommand=self._v_bar[tk.Y].set, height=16, width=80,
+                               listvariable=self._msg[VISITOR])
 
         self._task_manager.add_task(v_main)
-        self._public_dict[VISITOR] = self._v_text
 
         self._v_bar[tk.X].config(command=self._v_text.xview)
         self._v_bar[tk.Y].config(command=self._v_text.yview)
 
         self._v_start_button = tk.Button(self._frame[VISITOR], text="Start",
-                                         command=lambda: self._task_manager.run_task(1, self._public_dict))
+                                         command=lambda: self._task_manager.run_task(1, self._pipe[HOST]))
         self._v_cancel_button = tk.Button(self._frame[VISITOR], text="Cancel",
                                           command=lambda: self._task_manager.cancel_task(1))
 
@@ -182,6 +187,13 @@ class MainWindow(tk.Tk):
         if value:
             client.conf.update(value, [VISITOR, "server_address", "port"])
 
+    def get_info(self, select):
+        """get msg from client log"""
+        if select == HOST:
+            self._msg[HOST].set(self._pipe[HOST].read() + ' ')
+        else:
+            self._msg[VISITOR].set(self._pipe[VISITOR].read() + ' ')
+
     def __apply_conf(self):
         try:
             self.__update_conf()
@@ -204,9 +216,9 @@ class MainWindow(tk.Tk):
 
 class Message(tk.Listbox):
 
-    def __init__(self, master, xscrollcommand, yscrollcommand, height, width):
+    def __init__(self, master, xscrollcommand, yscrollcommand, height, width, listvariable):
         super().__init__(master=master, xscrollcommand=xscrollcommand, yscrollcommand=yscrollcommand, height=height,
-                         width=width)
+                         width=width, listvariable=listvariable)
         self._i = 0
 
         self.pack(side=tk.TOP, fill=tk.BOTH)
@@ -301,6 +313,18 @@ class Task:
     def running_count(self) -> int:
         self.check_process_alive()
         return self._run_count
+
+
+class Pipe:
+
+    def __init__(self):
+        self._queue = multiprocessing.Queue()
+
+    def write(self, msg):
+        self._queue.put(msg)
+
+    def read(self):
+        return self._queue.get()
 
 
 if __name__ == "__main__":
