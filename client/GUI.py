@@ -159,12 +159,11 @@ class MainWindow(tk.Tk):
         self._v_option["server_port"]["entry"].grid(row=7, column=1)
         self._v_option["server_port"]["entry"].insert(0, client.conf[VISITOR, "server_address", "port"])
 
-
         self._save["apply"].grid(row=11, column=0)
         self._save["save"].grid(row=11, column=1)
 
     def __update_conf(self):
-        value = self._h_option["open_port"]["entry"].get()
+        value = int(self._h_option["open_port"]["entry"].get())
         if value:
             client.conf.update(value, [HOST, "open_port"])
 
@@ -172,11 +171,11 @@ class MainWindow(tk.Tk):
         if value:
             client.conf.update(value, [HOST, "server_address", "internet_ip"])
 
-        value = self._h_option["server_port"]["entry"].get()
+        value = int(self._h_option["server_port"]["entry"].get())
         if value:
             client.conf.update(value, [HOST, "server_address", "port"])
 
-        value = self._v_option["open_port"]["entry"].get()
+        value = int(self._v_option["open_port"]["entry"].get())
         if value:
             client.conf.update(value, [VISITOR, "virtual_open_port"])
 
@@ -184,20 +183,26 @@ class MainWindow(tk.Tk):
         if value:
             client.conf.update(value, [VISITOR, "server_address", "internet_ip"])
 
-        value = self._v_option["server_port"]["entry"].get()
+        value = int(self._v_option["server_port"]["entry"].get())
         if value:
             client.conf.update(value, [VISITOR, "server_address", "port"])
 
     def __apply_conf(self):
-        self.__update_conf()
+        try:
+            self.__update_conf()
 
-        messagebox.showinfo(title="Info", message="Applied.")
+            messagebox.showinfo(title="Info", message="Applied.")
+        except ValueError:
+            messagebox.showwarning(title="Warning", message="Invalid input.")
 
     def __save_conf(self):
-        self.__update_conf()
-        client.conf.save()
+        try:
+            self.__update_conf()
+            client.conf.save()
 
-        messagebox.showinfo(title="Info", message="Saved.")
+            messagebox.showinfo(title="Info", message="Saved.")
+        except ValueError:
+            messagebox.showwarning(title="Warning", message="Invalid input.")
 
 
 class Message(tk.Listbox):
@@ -221,51 +226,82 @@ class Message(tk.Listbox):
 class TaskManager:
 
     def __init__(self, times: int = 1, mutex: bool = True, *task: typing.Callable):
-        self._tasks = []
-        self._processes: list[list[multiprocessing.Process]] = []
+        self._tasks: list[Task] = []
 
         for t in task:
-            self._tasks.append([t, 0])
-            self._processes.append([])
+            self._tasks.append(Task(t))
 
-        self._t = times
-        self._mutex = mutex
-
-    def __check_process(self):
-        """clean over processes and update process ticker"""
-        for i in range(len(self._tasks)):
-            j = 0
-            while j < len(self._processes[i]):
-                if not self._processes[i][j].is_alive():
-                    self._tasks[i][1] += -1
-                    del self._processes[i][j]
-                    j += -1
-                j += 1
+        self._max_t: int = times
+        self._mutex: bool = mutex
 
     def run_task(self, task: int):
         """start a process running on the task"""
 
-        self.__check_process()
-
         if self._mutex:
             for i in range(len(self._tasks)):
-                if (self._tasks[i][1] != 0) and i != task:
-                    return -2
+                if (self._tasks[i].running_count != 0) and i != task:
+                    return -2  # not run for mutex
 
-        if self._tasks[task][1] < self._t:
-            pcs = multiprocessing.Process(target=self._tasks[task][0])
-            self._processes[task].append(pcs)
-            pcs.start()
-            self._tasks[task][1] += 1
+        if self._tasks[task].running_count < self._max_t:
+            self._tasks[task].run()
 
         else:
-            return -1
+            return -1  # not run for max tick
 
     def cancel_task(self, task: int):
-        """terminate all processes running on the task"""
-        if self._tasks[task] != 0:
-            for process in self._processes[task]:
-                process.terminate()
+        """cancel all processes running on the task"""
+        if self._tasks[task].running_count != 0:
+            self._tasks[task].cancel()
+
+    def is_task_running(self, task: int) -> bool:
+        if self._tasks[task].running_count != 0:
+            return True
+        else:
+            return False
+
+
+class Task:
+
+    def __init__(self, func: typing.Callable):
+        self._func: typing.Callable = func
+        self._run_count: int = 0
+        self._process: list[multiprocessing.Process] = []
+
+    def run(self, *args, **kwargs):
+        pcs = multiprocessing.Process(target=self._func, args=args, kwargs=kwargs)
+        pcs.start()
+
+        self._process.append(pcs)
+        self.__add_count()
+
+    def __add_count(self):
+        self._run_count += 1
+
+    def __reduce_count(self):
+        self._run_count += -1
+
+    def cancel(self):
+        """terminate all processes running"""
+        for pcs in self._process:
+            pcs.terminate()
+
+    def check_process_alive(self):
+        """clean over processes and update process ticker"""
+        i = 0
+        while i < len(self._process):
+            if not self._process[i].is_alive():
+                del self._process[i]
+                self.__reduce_count()
+                i += -1
+            i += 1
+
+    def __repr__(self):
+        return f"{self._run_count} | {self._process}"
+
+    @property
+    def running_count(self) -> int:
+        self.check_process_alive()
+        return self._run_count
 
 
 if __name__ == "__main__":
