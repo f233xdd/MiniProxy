@@ -15,7 +15,7 @@ __all__ = ["Client", "HostClient", "VisitClient",
 HOST = "host"
 VISITOR = "visitor"
 
-server_addr: list[tuple[str, int], tuple[str, int]] = []
+server_addr: list[tuple[str, int], tuple[str, int]] = [('', 0), ('', 0)]
 open_port: int | None = None
 virtual_port: int | None = None
 
@@ -75,9 +75,10 @@ def _inner_init_host():
     client.MAX_LENGTH = conf[HOST, "data_max_length"]
 
     addr = conf[HOST, "server_address"]
-    server_addr.append((addr["internet_ip"], addr["port"]))
+    server_addr[0] = (addr["internet_ip"], addr["port"])
 
     open_port = conf[HOST, "open_port"]
+    print("inner host:", server_addr)
 
 
 def init_host(stream):
@@ -106,7 +107,7 @@ def init_host(stream):
 
     # client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
     # client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
-    print(server_addr)
+    print("host", server_addr)
 
 
 def _inner_init_visitor():
@@ -115,9 +116,10 @@ def _inner_init_visitor():
     client.MAX_LENGTH = conf[VISITOR, "data_max_length"]
 
     addr = conf[VISITOR, "server_address"]
-    server_addr.append((addr["internet_ip"], addr["port"]))
+    server_addr[1] = (addr["internet_ip"], addr["port"])
 
     virtual_port = conf[VISITOR, "virtual_open_port"]
+    print("inner visitor:", server_addr)
 
 
 def init_visitor(stream):
@@ -146,4 +148,4 @@ def init_visitor(stream):
 
     # client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
     # client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
-    print(server_addr)
+    print("visitor", server_addr)

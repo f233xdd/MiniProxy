@@ -5,15 +5,15 @@ import threading
 import client
 
 
-def main(virtual_port: int | None = None, stream=sys.stderr):
-    client.init_visitor(stream)
-
+def main(virtual_port: int | None = None, public=None):
+    # TODO: Manual filling
     if virtual_port:
         port = virtual_port
     else:
         port = client.virtual_port
 
-    visitor = client.VisitClient(client.server_addr[0], port)
+    print("host main", client.server_addr)
+    visitor = client.VisitClient(client.server_addr[1], port)
 
     functions = [visitor.send_data, visitor.get_data, visitor.virtual_server_main]
 
@@ -24,4 +24,5 @@ def main(virtual_port: int | None = None, stream=sys.stderr):
 
 
 if __name__ == "__main__":
+    client.init_visitor(sys.stderr)
     main()
