@@ -1,13 +1,19 @@
 # run this file to start your visitor client
+import sys
 import threading
 
 import client
 
 
-def main():
-    client.init_visitor()
+def main(virtual_port: int | None = None, stream=sys.stderr):
+    client.init_visitor(stream)
 
-    visitor = client.VisitClient(client.server_addr[0], client.virtual_port)
+    if virtual_port:
+        port = virtual_port
+    else:
+        port = client.virtual_port
+
+    visitor = client.VisitClient(client.server_addr[0], port)
 
     functions = [visitor.send_data, visitor.get_data, visitor.virtual_server_main]
 

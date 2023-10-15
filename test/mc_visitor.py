@@ -30,8 +30,9 @@ def wait(sign: bytes):
 
 
 def send():
-    for i in range(200):
+    for i in range(2000):
         client.sendall(bag + struct.pack('d', time.time()))
+        time.sleep(0.05)
     client.send(b"END")
 
 

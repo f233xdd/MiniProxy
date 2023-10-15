@@ -9,10 +9,14 @@ from .visitor_client import VisitClient
 from .tool import get_logger
 
 __all__ = ["Client", "HostClient", "VisitClient",
-           "server_addr", "virtual_port", "conf",
-           "init_host", "init_visitor"]
+           "server_addr", "open_port", "virtual_port",
+           "conf", "init_host", "init_visitor"]
+
+HOST = "host"
+VISITOR = "visitor"
 
 server_addr: list[tuple[str, int], tuple[str, int]] = []
+open_port: int | None = None
 virtual_port: int | None = None
 
 local_path = os.getcwd() + "\\client"
@@ -65,16 +69,25 @@ class Config:
 conf = Config(local_path + "\\config.json")
 
 
-def init_host():
-    """set up host basic config"""
-    client.MAX_LENGTH = conf["host", "data_max_length"]
-    addr = conf["host", "server_address"]
+def _inner_init_host():
+    global open_port
+
+    client.MAX_LENGTH = conf[HOST, "data_max_length"]
+
+    addr = conf[HOST, "server_address"]
     server_addr.append((addr["internet_ip"], addr["port"]))
 
-    client.log_length = conf["host", "debug", "console", "length"]
-    client.log_content = conf["host", "debug", "console", "content"]
+    open_port = conf[HOST, "open_port"]
 
-    if conf["host", "debug", "clear_log"]:
+
+def init_host(stream):
+    """set up host basic config"""
+    _inner_init_host()
+
+    client.log_length = conf[HOST, "debug", "console", "length"]
+    client.log_content = conf[HOST, "debug", "console", "content"]
+
+    if conf[HOST, "debug", "clear_log"]:
         try:
             os.remove(local_path + "\\log\\host.log")
             os.remove(local_path + "\\log\\host.send_data")
@@ -82,32 +95,39 @@ def init_host():
         except FileNotFoundError:
             pass
 
-    if conf["host", "debug", "file_log"]:
-        logger = get_logger("Host", local_path + "\\log\\host.log")
+    if conf[HOST, "debug", "file_log"]:
+        logger = get_logger(HOST, local_path + "\\log\\host.log", stream=stream)
         client.log = logger
         host_client.log = logger
     else:
-        logger = get_logger("Host")
+        logger = get_logger(HOST, stream=stream)
         client.log = logger
         host_client.log = logger
 
     # client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
     # client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
+    print(server_addr)
 
 
-def init_visitor():
-    """set up visitor basic config"""
+def _inner_init_visitor():
     global virtual_port
 
-    client.MAX_LENGTH = conf["visitor", "data_max_length"]
-    addr = conf["host", "server_address"]
+    client.MAX_LENGTH = conf[VISITOR, "data_max_length"]
+
+    addr = conf[VISITOR, "server_address"]
     server_addr.append((addr["internet_ip"], addr["port"]))
-    virtual_port = conf["visitor", "virtual_open_port"]
 
-    client.log_length = conf["visitor", "debug", "console", "length"]
-    client.log_content = conf["visitor", "debug", "console", "content"]
+    virtual_port = conf[VISITOR, "virtual_open_port"]
 
-    if conf["visitor", "debug", "clear_log"]:
+
+def init_visitor(stream):
+    """set up visitor basic config"""
+    _inner_init_visitor()
+
+    client.log_length = conf[VISITOR, "debug", "console", "length"]
+    client.log_content = conf[VISITOR, "debug", "console", "content"]
+
+    if conf[VISITOR, "debug", "clear_log"]:
         try:
             os.remove(local_path + "\\log\\visitor.log")
             os.remove(local_path + "\\log\\visitor.send_data")
@@ -115,14 +135,15 @@ def init_visitor():
         except FileNotFoundError:
             pass
 
-    if conf["visitor", "debug", "file_log"]:
-        logger = get_logger("Visitor", local_path + "\\log\\visitor.log")
+    if conf[VISITOR, "debug", "file_log"]:
+        logger = get_logger(VISITOR, local_path + "\\log\\visitor.log", stream=stream)
         client.log = logger
         visitor_client.log = logger
     else:
-        logger = get_logger("Visitor")
+        logger = get_logger(VISITOR, stream=stream)
         client.log = logger
         visitor_client.log = logger
 
     # client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
     # client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
+    print(server_addr)

@@ -1,8 +1,8 @@
 import multiprocessing
-import threading
 import typing
 import tkinter as tk
 from tkinter import ttk, messagebox
+from multiprocessing import Manager
 
 import client
 from host_main import main as h_main
@@ -18,7 +18,9 @@ class MainWindow(tk.Tk):
     def __init__(self, title, size):
         super().__init__()
 
-        self._task_manager = TaskManager(1, True, h_main, v_main)
+        self._task_manager = TaskManager(1, False)
+        self._public_manager = Manager()
+        self._public_dict: dict = self._public_manager.dict()  # TODO: pass it to other processes
 
         self.title(title)
         self.geometry(size)
@@ -46,11 +48,14 @@ class MainWindow(tk.Tk):
         self._h_text = Message(self._frame[HOST], xscrollcommand=self._h_bar[tk.X].set,
                                yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80)
 
+        self._task_manager.add_task(h_main)
+        self._public_dict[HOST] = self._h_text
+
         self._h_bar[tk.X].config(command=self._h_text.xview)
         self._h_bar[tk.Y].config(command=self._h_text.yview)
 
         self._h_start_button = tk.Button(self._frame[HOST], text="Start",
-                                         command=lambda: self._task_manager.run_task(0))
+                                         command=lambda: self._task_manager.run_task(0, self._public_dict))
         self._h_cancel_button = tk.Button(self._frame[HOST], text="Cancel",
                                           command=lambda: self._task_manager.cancel_task(0))
 
@@ -68,18 +73,21 @@ class MainWindow(tk.Tk):
         self._v_text = Message(self._frame[VISITOR], xscrollcommand=self._v_bar[tk.X].set,
                                yscrollcommand=self._v_bar[tk.Y].set, height=16, width=80)
 
+        self._task_manager.add_task(v_main)
+        self._public_dict[VISITOR] = self._v_text
+
         self._v_bar[tk.X].config(command=self._v_text.xview)
         self._v_bar[tk.Y].config(command=self._v_text.yview)
 
         self._v_start_button = tk.Button(self._frame[VISITOR], text="Start",
-                                         command=lambda: self._task_manager.run_task(1))
+                                         command=lambda: self._task_manager.run_task(1, self._public_dict))
         self._v_cancel_button = tk.Button(self._frame[VISITOR], text="Cancel",
                                           command=lambda: self._task_manager.cancel_task(1))
 
         self._v_start_button.pack(side=tk.LEFT, padx=60, pady=10)
         self._v_cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
         # option frame
-        self._h_option = {  # TODO: get inputs
+        self._h_option = {
             "open_port": {"label": tk.Label(self._frame[OPTION], text="Open port"),
                           "entry": tk.Entry(self._frame[OPTION])},
             "server_ip": {"label": tk.Label(self._frame[OPTION], text="Server ip"),
@@ -88,7 +96,7 @@ class MainWindow(tk.Tk):
                             "entry": tk.Entry(self._frame[OPTION])},
         }
 
-        self._v_option = {  # TODO: get inputs
+        self._v_option = {
             "open_port": {"label": tk.Label(self._frame[OPTION], text="Open port"),
                           "entry": tk.Entry(self._frame[OPTION])},
             "server_ip": {"label": tk.Label(self._frame[OPTION], text="Server ip"),
@@ -103,7 +111,7 @@ class MainWindow(tk.Tk):
             "general": tk.Label(self._frame[OPTION], text="General options>")
         }
 
-        self._save = {  # TODO: apply and save inputs
+        self._save = {  # TODO: apply inputs
             "apply": tk.Button(self._frame[OPTION], text="Apply",
                                command=self.__apply_conf),
             "save": tk.Button(self._frame[OPTION], text="Save",
@@ -115,19 +123,6 @@ class MainWindow(tk.Tk):
         self._check_button = tk.Checkbutton(self._frame[OPTION], text="Crypto",
                                             command=lambda: messagebox.showinfo(title="Info", message="Unavailable"))
         self._check_button.grid(row=10, column=0)
-
-    def show(self):
-        def h():
-            for i in range(120):
-                self._h_text.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%TEST%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-
-        def v():
-            for i in range(120):
-                self._v_text.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%TEST%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-
-        threading.Thread(target=h).start()
-        threading.Thread(target=v).start()
-        self.mainloop()
 
     def __init_option(self):
 
@@ -190,6 +185,8 @@ class MainWindow(tk.Tk):
     def __apply_conf(self):
         try:
             self.__update_conf()
+            client._inner_init_host()
+            client._inner_init_visitor()
 
             messagebox.showinfo(title="Info", message="Applied.")
         except ValueError:
@@ -225,27 +222,29 @@ class Message(tk.Listbox):
 
 class TaskManager:
 
-    def __init__(self, times: int = 1, mutex: bool = True, *task: typing.Callable):
+    def __init__(self, times: int = 1, mutex: bool = True):
         self._tasks: list[Task] = []
-
-        for t in task:
-            self._tasks.append(Task(t))
 
         self._max_t: int = times
         self._mutex: bool = mutex
 
-    def run_task(self, task: int):
+    def add_task(self, func: typing.Callable):
+        self._tasks.append(Task(func))
+
+    def run_task(self, task: int, *args, **kwargs):
         """start a process running on the task"""
 
         if self._mutex:
             for i in range(len(self._tasks)):
                 if (self._tasks[i].running_count != 0) and i != task:
+                    print(f"mutex: {task}")
                     return -2  # not run for mutex
 
         if self._tasks[task].running_count < self._max_t:
-            self._tasks[task].run()
+            self._tasks[task].run(*args, **kwargs)
 
         else:
+            print(f"count: {task}, {self._max_t}, {self._tasks[task]}")
             return -1  # not run for max tick
 
     def cancel_task(self, task: int):
@@ -274,12 +273,6 @@ class Task:
         self._process.append(pcs)
         self.__add_count()
 
-    def __add_count(self):
-        self._run_count += 1
-
-    def __reduce_count(self):
-        self._run_count += -1
-
     def cancel(self):
         """terminate all processes running"""
         for pcs in self._process:
@@ -295,6 +288,12 @@ class Task:
                 i += -1
             i += 1
 
+    def __add_count(self):
+        self._run_count += 1
+
+    def __reduce_count(self):
+        self._run_count += -1
+
     def __repr__(self):
         return f"{self._run_count} | {self._process}"
 
@@ -306,4 +305,4 @@ class Task:
 
 if __name__ == "__main__":
     root = MainWindow("client", "600x400")
-    root.show()
+    root.mainloop()
