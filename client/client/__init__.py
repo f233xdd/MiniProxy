@@ -10,12 +10,12 @@ from .tool import get_logger
 
 __all__ = ["Client", "HostClient", "VisitClient",
            "server_addr", "open_port", "virtual_port",
-           "conf", "init_host", "init_visitor"]
+           "conf", "_init_host_log", "_init_visitor_log"]
 
 HOST = "host"
 VISITOR = "visitor"
 
-server_addr: list[tuple[str, int], tuple[str, int]] = [('', 0), ('', 0)]
+server_addr: dict[str: tuple[str, int], str: tuple[str, int]] = {"host": ('', 0), "visitor": ('', 0)}
 open_port: int | None = None
 virtual_port: int | None = None
 
@@ -66,24 +66,34 @@ class Config:
         return f"updated: {self._updated} | {self._conf}"
 
 
-conf = Config(local_path + "\\config.json")
+class ClientConfig(Config):
+
+    def get_func_args(self, func: str) -> tuple[tuple[str, int], int]:
+        if func == HOST:
+            return ((self[HOST, "server_address", "internet_ip"], self[HOST, "server_address", "port"]),
+                    self[HOST, "open_port"])
+        elif func == VISITOR:
+            return ((self[VISITOR, "server_address", "internet_ip"], self[VISITOR, "server_address", "port"]),
+                    self[VISITOR, "virtual_open_port"])
 
 
-def _inner_init_host():
+conf = ClientConfig(local_path + "\\config.json")
+
+
+def _init_host_execute():
     global open_port
 
     client.MAX_LENGTH = conf[HOST, "data_max_length"]
 
     addr = conf[HOST, "server_address"]
-    server_addr[0] = (addr["internet_ip"], addr["port"])
+    server_addr[HOST] = (addr["internet_ip"], addr["port"])
 
     open_port = conf[HOST, "open_port"]
     print("inner host:", server_addr)
 
 
-def init_host(stream):
+def _init_host_log(stream):
     """set up host basic config"""
-    _inner_init_host()
 
     client.log_length = conf[HOST, "debug", "console", "length"]
     client.log_content = conf[HOST, "debug", "console", "content"]
@@ -107,24 +117,22 @@ def init_host(stream):
 
     # client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
     # client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
-    print("host", server_addr)
 
 
-def _inner_init_visitor():
+def _init_visitor_execute():
     global virtual_port
 
     client.MAX_LENGTH = conf[VISITOR, "data_max_length"]
 
     addr = conf[VISITOR, "server_address"]
-    server_addr[1] = (addr["internet_ip"], addr["port"])
+    server_addr[VISITOR] = (addr["internet_ip"], addr["port"])
 
     virtual_port = conf[VISITOR, "virtual_open_port"]
     print("inner visitor:", server_addr)
 
 
-def init_visitor(stream):
+def _init_visitor_log(stream):
     """set up visitor basic config"""
-    _inner_init_visitor()
 
     client.log_length = conf[VISITOR, "debug", "console", "length"]
     client.log_content = conf[VISITOR, "debug", "console", "content"]
@@ -148,4 +156,3 @@ def init_visitor(stream):
 
     # client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
     # client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
-    print("visitor", server_addr)

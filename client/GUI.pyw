@@ -1,4 +1,5 @@
 import multiprocessing
+import threading
 import typing
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -17,117 +18,153 @@ class MainWindow(tk.Tk):
     def __init__(self, title, size):
         super().__init__()
 
-        self._task_manager = TaskManager(1, False)
-        self._pipe: dict[str:Pipe, str:Pipe] = {
-            HOST: Pipe(),
-            VISITOR: Pipe(),
-        }
-        self._msg: dict[str:tk.StringVar, str:tk.StringVar] = {
-            HOST: tk.StringVar(),
-            VISITOR: tk.StringVar(),
-        }
-
         self.title(title)
         self.geometry(size)
 
+        self._task_manager = TaskManager(1, False)
         self._notebook = ttk.Notebook(self, width=20, height=20)
+        self._str_var = {
+            HOST: tk.StringVar(),
+            VISITOR: tk.StringVar(),
+        }
+        self._msg_pipe = {
+            HOST: MessagePipe(),
+            VISITOR: MessagePipe(),
+        }
 
         self._frame = {
-            HOST: tk.Frame(borderwidth=1),
-            VISITOR: tk.Frame(borderwidth=1),
-            OPTION: tk.Frame(borderwidth=1),
+            HOST: ClientFrame(self._task_manager, h_main, HOST,
+                              self._str_var[HOST], self._msg_pipe[HOST],
+                              borderwidth=0),
+            VISITOR: ClientFrame(self._task_manager, v_main, VISITOR,
+                                 self._str_var[VISITOR], self._msg_pipe[VISITOR],
+                                 borderwidth=0),
+            OPTION: OptionFrame(self._task_manager, self._msg_pipe, borderwidth=1),
         }
 
         self._notebook.add(self._frame[HOST], text=HOST)
         self._notebook.add(self._frame[VISITOR], text=VISITOR)
         self._notebook.add(self._frame[OPTION], text=OPTION)
         self._notebook.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
-        # host frame
-        self._h_bar = {
-            tk.X: tk.Scrollbar(self._frame[HOST], orient=tk.HORIZONTAL),
-            tk.Y: tk.Scrollbar(self._frame[HOST]),
+
+        self.__start()
+
+    def __start(self):
+        def get_host_msg():
+            total = ''
+            while True:
+                msg = self._msg_pipe[HOST].read()
+                total = ''.join([total, msg, ' '])
+
+                self._str_var[HOST].set(total)
+
+        def get_visitor_msg():
+            total = ''
+            while True:
+                msg = self._msg_pipe[VISITOR].read()
+                total = ''.join([total, msg, ' '])
+
+                self._str_var[VISITOR].set(total)
+
+        thd = [threading.Thread(target=get_host_msg),
+               threading.Thread(target=get_visitor_msg)]
+
+        for t in thd:
+            t.start()
+
+
+class ClientFrame(ttk.Frame):
+
+    def __init__(self, task_manager, func: typing.Callable, flag: str,
+                 str_var: tk.StringVar, msg_pipe, borderwidth: int):
+        super().__init__(borderwidth=borderwidth)
+        self._task_manager = task_manager
+
+        self._bar = {
+            tk.X: tk.Scrollbar(self, orient=tk.HORIZONTAL),
+            tk.Y: tk.Scrollbar(self),
         }
-        self._h_bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
-        self._h_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
-        self._h_text = Message(self._frame[HOST], xscrollcommand=self._h_bar[tk.X].set,
-                               yscrollcommand=self._h_bar[tk.Y].set, height=16, width=80,
-                               listvariable=self._msg[HOST])
+        self._text = Message(self, xscrollcommand=self._bar[tk.X].set,
+                             yscrollcommand=self._bar[tk.Y].set, height=16, width=80,
+                             listvariable=str_var)
 
-        self._task_manager.add_task(h_main)
+        if flag == HOST:
+            args = *client.conf.get_func_args(HOST), msg_pipe
 
-        self._h_bar[tk.X].config(command=self._h_text.xview)
-        self._h_bar[tk.Y].config(command=self._h_text.yview)
+        elif flag == VISITOR:
+            args = *client.conf.get_func_args(VISITOR), msg_pipe
 
-        self._h_start_button = tk.Button(self._frame[HOST], text="Start",
-                                         command=lambda: self._task_manager.run_task(0, self._pipe[HOST]))
-        self._h_cancel_button = tk.Button(self._frame[HOST], text="Cancel",
-                                          command=lambda: self._task_manager.cancel_task(0))
+        else:
+            raise ValueError
 
-        self._h_start_button.pack(side=tk.LEFT, padx=60, pady=10)
-        self._h_cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
-        # visitor frame
-        self._v_bar = {
-            tk.X: tk.Scrollbar(self._frame[VISITOR], orient=tk.HORIZONTAL),
-            tk.Y: tk.Scrollbar(self._frame[VISITOR]),
-        }
+        self._task_manager.add_task(func, flag, args)
 
-        self._v_bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
-        self._v_bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
+        self._bar[tk.X].config(command=self._text.xview)
+        self._bar[tk.Y].config(command=self._text.yview)
 
-        self._v_text = Message(self._frame[VISITOR], xscrollcommand=self._v_bar[tk.X].set,
-                               yscrollcommand=self._v_bar[tk.Y].set, height=16, width=80,
-                               listvariable=self._msg[VISITOR])
+        self._start_button = tk.Button(self, text="Start",
+                                       command=lambda: self._task_manager.run_task(flag))
+        self._cancel_button = tk.Button(self, text="Cancel",
+                                        command=lambda: self._task_manager.cancel_task(flag))
 
-        self._task_manager.add_task(v_main)
+        self.__pack_up()
 
-        self._v_bar[tk.X].config(command=self._v_text.xview)
-        self._v_bar[tk.Y].config(command=self._v_text.yview)
+    def __pack_up(self):
+        self._bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
+        self._bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
-        self._v_start_button = tk.Button(self._frame[VISITOR], text="Start",
-                                         command=lambda: self._task_manager.run_task(1, self._pipe[HOST]))
-        self._v_cancel_button = tk.Button(self._frame[VISITOR], text="Cancel",
-                                          command=lambda: self._task_manager.cancel_task(1))
+        self._text.pack(side=tk.TOP, fill=tk.BOTH)
 
-        self._v_start_button.pack(side=tk.LEFT, padx=60, pady=10)
-        self._v_cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
-        # option frame
+        self._start_button.pack(side=tk.LEFT, padx=60, pady=10)
+        self._cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
+
+
+class OptionFrame(ttk.Frame):
+
+    def __init__(self, task_manager, msg_pipe, borderwidth):
+        super().__init__(borderwidth=borderwidth)
+
+        self._task_manager = task_manager
+
         self._h_option = {
-            "open_port": {"label": tk.Label(self._frame[OPTION], text="Open port"),
-                          "entry": tk.Entry(self._frame[OPTION])},
-            "server_ip": {"label": tk.Label(self._frame[OPTION], text="Server ip"),
-                          "entry": tk.Entry(self._frame[OPTION])},
-            "server_port": {"label": tk.Label(self._frame[OPTION], text="Server port"),
-                            "entry": tk.Entry(self._frame[OPTION])},
+            "open_port": {"label": tk.Label(self, text="Open port"),
+                          "entry": tk.Entry(self)},
+            "server_ip": {"label": tk.Label(self, text="Server ip"),
+                          "entry": tk.Entry(self)},
+            "server_port": {"label": tk.Label(self, text="Server port"),
+                            "entry": tk.Entry(self)},
         }
 
         self._v_option = {
-            "open_port": {"label": tk.Label(self._frame[OPTION], text="Open port"),
-                          "entry": tk.Entry(self._frame[OPTION])},
-            "server_ip": {"label": tk.Label(self._frame[OPTION], text="Server ip"),
-                          "entry": tk.Entry(self._frame[OPTION])},
-            "server_port": {"label": tk.Label(self._frame[OPTION], text="Server port"),
-                            "entry": tk.Entry(self._frame[OPTION])},
+            "open_port": {"label": tk.Label(self, text="Open port"),
+                          "entry": tk.Entry(self)},
+            "server_ip": {"label": tk.Label(self, text="Server ip"),
+                          "entry": tk.Entry(self)},
+            "server_port": {"label": tk.Label(self, text="Server port"),
+                            "entry": tk.Entry(self)},
         }
 
         self._title = {
-            "host": tk.Label(self._frame[OPTION], text="Host options>"),
-            "visitor": tk.Label(self._frame[OPTION], text="Visitor options>"),
-            "general": tk.Label(self._frame[OPTION], text="General options>")
+            "host": tk.Label(self, text="Host options>"),
+            "visitor": tk.Label(self, text="Visitor options>"),
+            "general": tk.Label(self, text="General options>")
         }
 
-        self._save = {  # TODO: apply inputs
-            "apply": tk.Button(self._frame[OPTION], text="Apply",
+        self._save = {
+            "apply": tk.Button(self, text="Apply",
                                command=self.__apply_conf),
-            "save": tk.Button(self._frame[OPTION], text="Save",
+            "save": tk.Button(self, text="Save",
                               command=self.__save_conf)
         }
 
         self.__init_option()
         #  TODO: ensure whether module is installed
-        self._check_button = tk.Checkbutton(self._frame[OPTION], text="Crypto",
+        self._check_button = tk.Checkbutton(self, text="Crypto",
                                             command=lambda: messagebox.showinfo(title="Info", message="Unavailable"))
+
         self._check_button.grid(row=10, column=0)
+        self._pipe = msg_pipe
 
     def __init_option(self):
 
@@ -162,47 +199,18 @@ class MainWindow(tk.Tk):
         self._save["apply"].grid(row=11, column=0)
         self._save["save"].grid(row=11, column=1)
 
-    def __update_conf(self):
-        value = int(self._h_option["open_port"]["entry"].get())
-        if value:
-            client.conf.update(value, [HOST, "open_port"])
-
-        value = self._h_option["server_ip"]["entry"].get()
-        if value:
-            client.conf.update(value, [HOST, "server_address", "internet_ip"])
-
-        value = int(self._h_option["server_port"]["entry"].get())
-        if value:
-            client.conf.update(value, [HOST, "server_address", "port"])
-
-        value = int(self._v_option["open_port"]["entry"].get())
-        if value:
-            client.conf.update(value, [VISITOR, "virtual_open_port"])
-
-        value = self._v_option["server_ip"]["entry"].get()
-        if value:
-            client.conf.update(value, [VISITOR, "server_address", "internet_ip"])
-
-        value = int(self._v_option["server_port"]["entry"].get())
-        if value:
-            client.conf.update(value, [VISITOR, "server_address", "port"])
-
-    def get_info(self, select):
-        """get msg from client log"""
-        if select == HOST:
-            self._msg[HOST].set(self._pipe[HOST].read() + ' ')
-        else:
-            self._msg[VISITOR].set(self._pipe[VISITOR].read() + ' ')
-
     def __apply_conf(self):
         try:
             self.__update_conf()
-            client._inner_init_host()
-            client._inner_init_visitor()
+
+            self._task_manager.set_args(HOST, (*client.conf.get_func_args(HOST), self._pipe[HOST]))
+            self._task_manager.set_args(VISITOR, (*client.conf.get_func_args(VISITOR), self._pipe[VISITOR]))
+            # client._init_host_execute()
+            # client._init_visitor_execute()
 
             messagebox.showinfo(title="Info", message="Applied.")
-        except ValueError:
-            messagebox.showwarning(title="Warning", message="Invalid input.")
+        except ValueError as e:
+            messagebox.showwarning(title="Warning", message=f"Invalid input: {e}.")
 
     def __save_conf(self):
         try:
@@ -210,8 +218,33 @@ class MainWindow(tk.Tk):
             client.conf.save()
 
             messagebox.showinfo(title="Info", message="Saved.")
-        except ValueError:
-            messagebox.showwarning(title="Warning", message="Invalid input.")
+        except ValueError as e:
+            messagebox.showwarning(title="Warning", message=f"Invalid input: {e}.")
+
+    def __update_conf(self):
+        value = self._h_option["open_port"]["entry"].get()
+        if verify_port(value):
+            client.conf.update(int(value), [HOST, "open_port"])
+
+        value = self._h_option["server_ip"]["entry"].get()
+        if verify_ip(value):
+            client.conf.update(value, [HOST, "server_address", "internet_ip"])
+
+        value = self._h_option["server_port"]["entry"].get()
+        if verify_port(value):
+            client.conf.update(int(value), [HOST, "server_address", "port"])
+
+        value = self._v_option["open_port"]["entry"].get()
+        if verify_port(value):
+            client.conf.update(int(value), [VISITOR, "virtual_open_port"])
+
+        value = self._v_option["server_ip"]["entry"].get()
+        if verify_ip(value):
+            client.conf.update(value, [VISITOR, "server_address", "internet_ip"])
+
+        value = self._v_option["server_port"]["entry"].get()
+        if verify_port(value):
+            client.conf.update(int(value), [VISITOR, "server_address", "port"])
 
 
 class Message(tk.Listbox):
@@ -220,8 +253,6 @@ class Message(tk.Listbox):
         super().__init__(master=master, xscrollcommand=xscrollcommand, yscrollcommand=yscrollcommand, height=height,
                          width=width, listvariable=listvariable)
         self._i = 0
-
-        self.pack(side=tk.TOP, fill=tk.BOTH)
 
     def write(self, msg):
         self.insert(tk.END, f"<L{self._i:0>3}\\> {msg}\n")
@@ -235,37 +266,47 @@ class Message(tk.Listbox):
 class TaskManager:
 
     def __init__(self, times: int = 1, mutex: bool = True):
-        self._tasks: list[Task] = []
+        self._tasks: dict[str: Task] = {}
 
         self._max_t: int = times
         self._mutex: bool = mutex
 
-    def add_task(self, func: typing.Callable):
-        self._tasks.append(Task(func))
+    def add_task(self, func: typing.Callable, flag: str, args: tuple, kwargs: dict | None = None):
+        if kwargs is None:
+            kwargs = {}
 
-    def run_task(self, task: int, *args, **kwargs):
+        self._tasks[flag] = Task(func, args, kwargs)
+
+    def run_task(self, flag: int, *args, **kwargs):
         """start a process running on the task"""
 
         if self._mutex:
-            for i in range(len(self._tasks)):
-                if (self._tasks[i].running_count != 0) and i != task:
-                    print(f"mutex: {task}")
+            for k in self._tasks.keys():
+                if self.is_task_running(k) and k != flag:
+                    print(f"mutex: {flag}")
                     return -2  # not run for mutex
 
-        if self._tasks[task].running_count < self._max_t:
-            self._tasks[task].run(*args, **kwargs)
+        if self._tasks[flag].running_count < self._max_t:
+            if args or kwargs:
+                self._tasks[flag].run(*args, **kwargs)
+            else:
+                print("by_saved_args")
+                self._tasks[flag].run(by_saved_args=True)
 
         else:
-            print(f"count: {task}, {self._max_t}, {self._tasks[task]}")
+            print(f"count: {flag}, {self._max_t}, {self._tasks[flag]}")
             return -1  # not run for max tick
 
-    def cancel_task(self, task: int):
+    def cancel_task(self, flag: int):
         """cancel all processes running on the task"""
-        if self._tasks[task].running_count != 0:
-            self._tasks[task].cancel()
+        if self.is_task_running(flag):
+            self._tasks[flag].cancel()
 
-    def is_task_running(self, task: int) -> bool:
-        if self._tasks[task].running_count != 0:
+    def set_args(self, flag, *args, **kwargs):
+        self._tasks[flag].set_args(*args, **kwargs)
+
+    def is_task_running(self, flag: int) -> bool:
+        if self._tasks[flag].running_count != 0:
             return True
         else:
             return False
@@ -273,13 +314,25 @@ class TaskManager:
 
 class Task:
 
-    def __init__(self, func: typing.Callable):
-        self._func: typing.Callable = func
+    def __init__(self, func: typing.Callable, args: tuple = (), kwargs: dict | None = None):
+
+        self._func = func
+        self._args = args
+        if kwargs is None:
+            self._kwargs = {}
+        else:
+            self._kwargs = kwargs
+
         self._run_count: int = 0
         self._process: list[multiprocessing.Process] = []
 
-    def run(self, *args, **kwargs):
-        pcs = multiprocessing.Process(target=self._func, args=args, kwargs=kwargs)
+    def run(self, by_saved_args: bool = False, *args, **kwargs):
+        if by_saved_args:
+            print(self._args, self._kwargs)  # TODO: can't pass MessagePipe twice
+            pcs = multiprocessing.Process(target=self._func, args=self._args, kwargs=self._kwargs)
+        else:
+            pcs = multiprocessing.Process(target=self._func, args=args, kwargs=kwargs)
+
         pcs.start()
 
         self._process.append(pcs)
@@ -290,7 +343,15 @@ class Task:
         for pcs in self._process:
             pcs.terminate()
 
-    def check_process_alive(self):
+    def set_args(self, *args, **kwargs):
+        """set default args"""
+        if args:
+            self._args = args
+
+        if kwargs:
+            self._kwargs = kwargs
+
+    def __check_process_alive(self):
         """clean over processes and update process ticker"""
         i = 0
         while i < len(self._process):
@@ -311,20 +372,49 @@ class Task:
 
     @property
     def running_count(self) -> int:
-        self.check_process_alive()
+        self.__check_process_alive()
         return self._run_count
 
 
-class Pipe:
+class MessagePipe:
 
     def __init__(self):
         self._queue = multiprocessing.Queue()
 
     def write(self, msg):
+        print("w")
         self._queue.put(msg)
 
-    def read(self):
-        return self._queue.get()
+    def read(self, block: bool = True):
+        print("r")
+        return self._queue.get(block=block)
+
+
+def verify_ip(ip: str) -> bool:
+    if isinstance(ip, str):
+        sep_str = ip.split('.')
+
+        if len(sep_str) == 4:
+            try:
+                for s in sep_str:
+                    if not 0 <= int(s) <= 999:
+                        return False
+                return True
+            except ValueError:
+                pass
+
+    raise ValueError(ip)
+
+
+def verify_port(port: str) -> bool:
+    if isinstance(port, str):
+        try:
+            if 0 <= int(port) <= 65535:
+                return True
+        except ValueError:
+            pass
+
+    raise ValueError(port)
 
 
 if __name__ == "__main__":

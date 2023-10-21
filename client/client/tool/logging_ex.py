@@ -3,11 +3,12 @@ import sys
 
 
 def get_logger(name, log_file: str = "", stream=sys.stderr):
-    format_msg = "[%(levelname)s] [%(asctime)s] [%(funcName)s] %(message)s"
+    format_msg = "[%(levelname)s][%(asctime)s][%(funcName)s]%(message)s"
     format_time = "%H:%M:%S"
 
     formatter = logging.Formatter(format_msg, format_time)
 
+    print(stream)
     console_handler = logging.StreamHandler(stream)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.INFO)
