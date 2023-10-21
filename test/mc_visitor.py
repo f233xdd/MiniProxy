@@ -12,7 +12,7 @@ data: bytes = (
 )
 
 MAX_LENGTH = None
-addr = (socket.gethostname(), 25566)
+addr = (socket.gethostname(), 9998)
 _log = log.create_logger("MC_visitor", log_file="mc_visitor.log")
 
 
@@ -54,6 +54,7 @@ def recv():
             else:
                 break
     except Exception as e:
+        _log.error(len(recv_data))
         _log.error(e)
 
 

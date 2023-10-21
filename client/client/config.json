@@ -2,14 +2,14 @@
   "host": {
     "data_max_length": 999999,
     "debug": {
-      "clear_log": false,
+      "clear_log": true,
       "console": {
-        "content": true,
+        "content": false,
         "length": true
       },
       "file_log": true
     },
-    "open_port": 25565,
+    "open_port": 9999,
     "server_address": {
       "internet_ip": "127.0.0.1",
       "port": 25565
@@ -18,17 +18,17 @@
   "visitor": {
     "data_max_length": 999999,
     "debug": {
-      "clear_log": false,
+      "clear_log": true,
       "console": {
-        "content": true,
+        "content": false,
         "length": true
       },
       "file_log": true
     },
     "server_address": {
       "internet_ip": "127.0.0.1",
-      "port": 9998
+      "port": 25566
     },
-    "virtual_open_port": 25566
+    "virtual_open_port": 9998
   }
 }

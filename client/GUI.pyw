@@ -21,7 +21,7 @@ class MainWindow(tk.Tk):
         self.title(title)
         self.geometry(size)
 
-        self._task_manager = TaskManager(1, False)
+        self._task_manager = TaskManager(times=1, mutex=False)
         self._notebook = ttk.Notebook(self, width=20, height=20)
         self._str_var = {
             HOST: tk.StringVar(),
@@ -63,8 +63,7 @@ class ClientFrame(ttk.Frame):
         }
 
         self._text = Message(self, xscrollcommand=self._bar[tk.X].set,
-                             yscrollcommand=self._bar[tk.Y].set, height=16, width=80,
-                             listvariable=self._txt_var)
+                             yscrollcommand=self._bar[tk.Y].set, height=16, width=80, warp="none")
 
         if flag == HOST:
             args = *client.conf.get_func_args(HOST), self._msg_pipe
@@ -105,8 +104,7 @@ class ClientFrame(ttk.Frame):
             msg = self._msg_pipe.read()
             total = ''.join([total, msg, ' '])
 
-            self._txt_var.set(total)
-            self._text.see(tk.END)
+            self._text.write(msg)
 
 
 class OptionFrame(ttk.Frame):
@@ -236,17 +234,22 @@ class OptionFrame(ttk.Frame):
             client.conf.update(int(value), [VISITOR, "server_address", "port"])
 
 
-class Message(tk.Listbox):
+class Message(tk.Text):
 
-    def __init__(self, master, xscrollcommand, yscrollcommand, height, width, listvariable):
+    def __init__(self, master, xscrollcommand, yscrollcommand, height, width, warp):
         super().__init__(master=master, xscrollcommand=xscrollcommand, yscrollcommand=yscrollcommand, height=height,
-                         width=width, listvariable=listvariable)
+                         width=width, wrap=warp, font=('Ubuntu Mono', 13, ''))
+
+        self.config(state=tk.DISABLED)
         self._i = 0
 
     def write(self, msg):
-        self.insert(tk.END, f"<L{self._i:0>3}\\> {msg}\n")
+        self.config(state=tk.NORMAL)
 
+        self.insert(tk.END, f"{self._i:0>3}| {msg}")
         self.update()
+
+        self.config(state=tk.DISABLED)
         self.see(tk.END)
 
         self._i += 1
@@ -266,7 +269,7 @@ class TaskManager:
 
         self._tasks[flag] = Task(func, args, kwargs)
 
-    def run_task(self, flag: int, *args, **kwargs):
+    def run_task(self, flag: str, *args, **kwargs):
         """start a process running on the task"""
 
         if self._mutex:

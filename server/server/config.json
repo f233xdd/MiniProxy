@@ -3,8 +3,8 @@
   "local_address": {
     "private_ip": "127.0.0.1",
     "ports": [
-      9999,
-      9998
+      25565,
+      25566
     ]
   },
   "debug": {
@@ -12,7 +12,7 @@
     "clear_log": true,
     "console": {
       "length": true,
-      "content": true
+      "content": false
     }
   }
 }

@@ -19,10 +19,10 @@ server_addr: dict[str: tuple[str, int], str: tuple[str, int]] = {"host": ('', 0)
 open_port: int | None = None
 virtual_port: int | None = None
 
-local_path = os.getcwd() + "\\client"
+local_path = os.getcwd() + "/client"
 
-if not os.path.exists(local_path + "\\log"):
-    os.mkdir(local_path + "\\log")
+if not os.path.exists(local_path + "/log"):
+    os.mkdir(local_path + "/log")
 
 
 class Config:
@@ -77,7 +77,7 @@ class ClientConfig(Config):
                     self[VISITOR, "virtual_open_port"])
 
 
-conf = ClientConfig(local_path + "\\config.json")
+conf = ClientConfig(local_path + "/config.json")
 
 
 def _init_host_execute():
@@ -99,14 +99,14 @@ def _init_host_log(stream):
 
     if conf[HOST, "debug", "clear_log"]:
         try:
-            os.remove(local_path + "\\log\\host.log")
-            os.remove(local_path + "\\log\\host.send_data")
-            os.remove(local_path + "\\log\\host.recv_data")
+            os.remove(local_path + "/log/host.log")
+            os.remove(local_path + "/log/host.send_data")
+            os.remove(local_path + "/log/host.recv_data")
         except FileNotFoundError:
             pass
 
     if conf[HOST, "debug", "file_log"]:
-        logger = get_logger(HOST, local_path + "\\log\\host.log", stream=stream)
+        logger = get_logger(HOST, local_path + "/log/host.log", stream=stream)
         client.log = logger
         host_client.log = logger
     else:
@@ -114,8 +114,8 @@ def _init_host_log(stream):
         client.log = logger
         host_client.log = logger
 
-    # client.recv_data_log = open(local_path + "\\log\\host.recv_data", 'wb')
-    # client.send_data_log = open(local_path + "\\log\\host.send_data", 'wb')
+    # client.recv_data_log = open(local_path + "/log/host.recv_data", 'wb')
+    # client.send_data_log = open(local_path + "/log/host.send_data", 'wb')
 
 
 def _init_visitor_execute():
@@ -137,14 +137,14 @@ def _init_visitor_log(stream):
 
     if conf[VISITOR, "debug", "clear_log"]:
         try:
-            os.remove(local_path + "\\log\\visitor.log")
-            os.remove(local_path + "\\log\\visitor.send_data")
-            os.remove(local_path + "\\log\\visitor.recv_data")
+            os.remove(local_path + "/log/visitor.log")
+            os.remove(local_path + "/log/visitor.send_data")
+            os.remove(local_path + "/log/visitor.recv_data")
         except FileNotFoundError:
             pass
 
     if conf[VISITOR, "debug", "file_log"]:
-        logger = get_logger(VISITOR, local_path + "\\log\\visitor.log", stream=stream)
+        logger = get_logger(VISITOR, local_path + "/log/visitor.log", stream=stream)
         client.log = logger
         visitor_client.log = logger
     else:
@@ -152,5 +152,5 @@ def _init_visitor_log(stream):
         client.log = logger
         visitor_client.log = logger
 
-    # client.recv_data_log = open(local_path + "\\log\\visitor.recv_data", 'wb')
-    # client.send_data_log = open(local_path + "\\log\\visitor.send_data", 'wb')
+    # client.recv_data_log = open(local_path + "/log/visitor.recv_data", 'wb')
+    # client.send_data_log = open(local_path + "/log/visitor.send_data", 'wb')

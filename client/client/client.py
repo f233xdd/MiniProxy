@@ -40,6 +40,7 @@ class Client(object):
 
         data = self._server.recv(MAX_LENGTH)
         print(data.decode(self._encoding))
+        log.info("Connect server.")
 
     def get_data(self):
         """get data from server"""

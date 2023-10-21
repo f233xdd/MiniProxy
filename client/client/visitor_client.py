@@ -30,7 +30,7 @@ class VisitClient(client.Client):
 
         ip = socket.gethostbyname(socket.gethostname())
         addr = (ip, self._port)
-        print(f"{ip}:{self._port}\n")
+        log.info(f"{ip}:{self._port}\n")
 
         self._virtual_server.bind(addr)
         self._virtual_server.listen(1)
