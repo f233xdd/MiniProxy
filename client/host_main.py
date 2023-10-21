@@ -1,7 +1,6 @@
 # run this file to start your host client
 import sys
 import threading
-import time
 
 import client
 
@@ -10,7 +9,6 @@ def main(
         server_addr: tuple[str, int] | None = None,
         open_port: int | None = None,
         public=None):
-    print("main: ", public)
     client._init_host_execute()
     if server_addr:
         addr = server_addr
@@ -26,20 +24,15 @@ def main(
         client._init_host_log(public)
     else:
         client._init_host_log(sys.stderr)
-    #
-    # host = client.HostClient(addr, port)
-    #
-    # functions = [host.send_data, host.get_data, host.virtual_client_main]
-    #
-    # threads = [threading.Thread(target=func) for func in functions]
-    #
-    # for thread in threads:
-    #     thread.start()
-    for i in range(5):
-        client.client.log.info(f"TEST[{i}]")
-        time.sleep(1)
 
-    print("Done!")
+    host = client.HostClient(addr, port)
+
+    functions = [host.send_data, host.get_data, host.virtual_client_main]
+
+    threads = [threading.Thread(target=func) for func in functions]
+
+    for thread in threads:
+        thread.start()
 
 
 if __name__ == "__main__":

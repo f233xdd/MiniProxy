@@ -47,31 +47,6 @@ class MainWindow(tk.Tk):
         self._notebook.add(self._frame[OPTION], text=OPTION)
         self._notebook.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
-        self.__start()
-
-    def __start(self):
-        def get_host_msg():
-            total = ''
-            while True:
-                msg = self._msg_pipe[HOST].read()
-                total = ''.join([total, msg, ' '])
-
-                self._str_var[HOST].set(total)
-
-        def get_visitor_msg():
-            total = ''
-            while True:
-                msg = self._msg_pipe[VISITOR].read()
-                total = ''.join([total, msg, ' '])
-
-                self._str_var[VISITOR].set(total)
-
-        thd = [threading.Thread(target=get_host_msg),
-               threading.Thread(target=get_visitor_msg)]
-
-        for t in thd:
-            t.start()
-
 
 class ClientFrame(ttk.Frame):
 
@@ -79,6 +54,8 @@ class ClientFrame(ttk.Frame):
                  str_var: tk.StringVar, msg_pipe, borderwidth: int):
         super().__init__(borderwidth=borderwidth)
         self._task_manager = task_manager
+        self._msg_pipe = msg_pipe
+        self._txt_var = str_var
 
         self._bar = {
             tk.X: tk.Scrollbar(self, orient=tk.HORIZONTAL),
@@ -87,13 +64,13 @@ class ClientFrame(ttk.Frame):
 
         self._text = Message(self, xscrollcommand=self._bar[tk.X].set,
                              yscrollcommand=self._bar[tk.Y].set, height=16, width=80,
-                             listvariable=str_var)
+                             listvariable=self._txt_var)
 
         if flag == HOST:
-            args = *client.conf.get_func_args(HOST), msg_pipe
+            args = *client.conf.get_func_args(HOST), self._msg_pipe
 
         elif flag == VISITOR:
-            args = *client.conf.get_func_args(VISITOR), msg_pipe
+            args = *client.conf.get_func_args(VISITOR), self._msg_pipe
 
         else:
             raise ValueError
@@ -110,6 +87,9 @@ class ClientFrame(ttk.Frame):
 
         self.__pack_up()
 
+        thd = threading.Thread(target=self.__get_msg)
+        thd.start()
+
     def __pack_up(self):
         self._bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
         self._bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
@@ -118,6 +98,15 @@ class ClientFrame(ttk.Frame):
 
         self._start_button.pack(side=tk.LEFT, padx=60, pady=10)
         self._cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
+
+    def __get_msg(self):
+        total = ''
+        while True:
+            msg = self._msg_pipe.read()
+            total = ''.join([total, msg, ' '])
+
+            self._txt_var.set(total)
+            self._text.see(tk.END)
 
 
 class OptionFrame(ttk.Frame):
@@ -203,8 +192,8 @@ class OptionFrame(ttk.Frame):
         try:
             self.__update_conf()
 
-            self._task_manager.set_args(HOST, (*client.conf.get_func_args(HOST), self._pipe[HOST]))
-            self._task_manager.set_args(VISITOR, (*client.conf.get_func_args(VISITOR), self._pipe[VISITOR]))
+            self._task_manager.set_args(HOST, *client.conf.get_func_args(HOST), self._pipe[HOST])
+            self._task_manager.set_args(VISITOR, *client.conf.get_func_args(VISITOR), self._pipe[VISITOR])
             # client._init_host_execute()
             # client._init_visitor_execute()
 
@@ -290,7 +279,6 @@ class TaskManager:
             if args or kwargs:
                 self._tasks[flag].run(*args, **kwargs)
             else:
-                print("by_saved_args")
                 self._tasks[flag].run(by_saved_args=True)
 
         else:
@@ -328,7 +316,6 @@ class Task:
 
     def run(self, by_saved_args: bool = False, *args, **kwargs):
         if by_saved_args:
-            print(self._args, self._kwargs)  # TODO: can't pass MessagePipe twice
             pcs = multiprocessing.Process(target=self._func, args=self._args, kwargs=self._kwargs)
         else:
             pcs = multiprocessing.Process(target=self._func, args=args, kwargs=kwargs)
@@ -382,11 +369,9 @@ class MessagePipe:
         self._queue = multiprocessing.Queue()
 
     def write(self, msg):
-        print("w")
         self._queue.put(msg)
 
     def read(self, block: bool = True):
-        print("r")
         return self._queue.get(block=block)
 
 

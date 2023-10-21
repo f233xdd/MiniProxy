@@ -12,7 +12,7 @@
     "open_port": 25565,
     "server_address": {
       "internet_ip": "127.0.0.1",
-      "port": 9999
+      "port": 25565
     }
   },
   "visitor": {

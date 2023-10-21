@@ -89,7 +89,6 @@ def _init_host_execute():
     server_addr[HOST] = (addr["internet_ip"], addr["port"])
 
     open_port = conf[HOST, "open_port"]
-    print("inner host:", server_addr)
 
 
 def _init_host_log(stream):
@@ -128,7 +127,6 @@ def _init_visitor_execute():
     server_addr[VISITOR] = (addr["internet_ip"], addr["port"])
 
     virtual_port = conf[VISITOR, "virtual_open_port"]
-    print("inner visitor:", server_addr)
 
 
 def _init_visitor_log(stream):
