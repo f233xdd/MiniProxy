@@ -25,9 +25,13 @@ def main(server_addr: tuple[str, int] | None = None,
     else:
         client._init_visitor_log(sys.stderr)
 
-    visitor = client.VisitClient(addr, port)
+    try:
+        visitor = client.VisitClient(addr, port)
+    except ConnectionRefusedError as e:
+        client.client.log.error(e)
+        sys.exit(-1)
 
-    functions = [visitor.send_data, visitor.get_data, visitor.virtual_server_main]
+    functions = [visitor.send_server_data, visitor.get_server_data, visitor.local_server_main]
 
     threads = [threading.Thread(target=func) for func in functions]
 

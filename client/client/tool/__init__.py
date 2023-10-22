@@ -1,4 +1,11 @@
 from .buffer import *
 from .logging_ex import *
 
-__all__ = ["Buffer", "get_logger", "message"]
+try:
+    from .crypto import *
+
+    crypto_available = True
+except ImportError:
+    crypto_available = False
+
+__all__ = ["BinaryBuffer", "get_logger", "message"]

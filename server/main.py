@@ -13,7 +13,7 @@ def main():
     print("Create threads.", end='... ')
     thread_1 = threading.Thread(target=server_1.start)
     thread_2 = threading.Thread(target=server_2.start)
-    print("Done!")
+    print("Done!")  # rebuild with process
 
     thread_1.start()
     thread_2.start()

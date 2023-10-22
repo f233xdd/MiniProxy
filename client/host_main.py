@@ -25,9 +25,13 @@ def main(
     else:
         client._init_host_log(sys.stderr)
 
-    host = client.HostClient(addr, port)
+    try:
+        host = client.HostClient(addr, port)
+    except ConnectionRefusedError as e:
+        client.client.log.error(e)
+        sys.exit(-1)
 
-    functions = [host.send_data, host.get_data, host.virtual_client_main]
+    functions = [host.send_server_data, host.get_server_data, host.local_client_main]
 
     threads = [threading.Thread(target=func) for func in functions]
 

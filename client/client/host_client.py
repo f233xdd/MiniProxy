@@ -19,35 +19,36 @@ class HostClient(client.Client):
         self._send_func_alive: bool | None = None
         self._get_func_alive: bool | None = None
 
-    def __connect_mc_server(self):
+    def __connect_local(self):
+        """connect with local as a guest"""
         self._virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self._virtual_client.connect((socket.gethostname(), self._me_port))
-            log.info("Mc connected")
+            log.info("local server connected")
         except ConnectionError as error:
-            log.error(f"Error: failed to connect with mc({error})")
+            log.error(f"failed to connect with local server: {error}")
             raise
 
-    def __send_java_data(self):
-        """send data to java"""
+    def __send_local_data(self):
+        """send data to local"""
         self._send_func_alive = True
 
         try:
             while True:
                 try:
-                    data = self._data_queue_2.get(timeout=2)
+                    data = self._queue_to_local.get(timeout=2)
 
                 except queue.Empty:
                     if self._get_func_alive is False:
                         self._send_func_alive = False
-                        log.warning("__send_java_data is down for get func(timeout)")
+                        log.warning("interrupt for get func(timeout)")
                         break
                     else:
                         continue
 
                 if self._get_func_alive is False:
                     self._send_func_alive = False
-                    log.warning("__send_java_data is down for get func")
+                    log.warning("interrupt for get func")
                     break
 
                 self._virtual_client.sendall(data)
@@ -57,11 +58,11 @@ class HostClient(client.Client):
                     log.debug(msg)
 
         except ConnectionError as error:
-            log.error(f"{error} from send_java_data")
+            log.error(f"{error}")
             self._send_func_alive = False
 
     def __get_local_data(self):
-        """get data from java"""
+        """get data from local"""
         self._get_func_alive = True
 
         try:
@@ -71,31 +72,31 @@ class HostClient(client.Client):
                 except TimeoutError:
                     if self._send_func_alive is False:
                         self._get_func_alive = False
-                        log.warning("__get_local_data is down for send func(timeout)")
+                        log.warning("interrupt for send func(timeout)")
                         break
                     else:
                         continue
 
                 if self._send_func_alive is False:
                     self._get_func_alive = False
-                    log.warning("__get_local_data is down for send func")
+                    log.warning("interrupt for send func")
                     break
 
-                self._data_queue_1.put(data)
+                self._queue_to_server.put(data)
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
                     log.debug(msg)
 
         except ConnectionError as error:
-            log.error(f"{error} from send_java_data")
+            log.error(f"{error}")
             self._get_func_alive = False
 
-    def virtual_client_main(self):
-        functions = [self.__send_java_data, self.__get_local_data]
+    def local_client_main(self):
+        functions = [self.__send_local_data, self.__get_local_data]
 
         while True:
-            self.__connect_mc_server()
+            self.__connect_local()
 
             threads = [threading.Thread(target=func) for func in functions]
 
@@ -105,6 +106,5 @@ class HostClient(client.Client):
             for thd in threads:
                 thd.join()
 
-            log.info("Virtual client is down!")
-            input('type [ENTER] to restart> ')
-            log.info("Virtual client restart...")
+            log.info("connection interrupted")
+            log.info("reconnecting")

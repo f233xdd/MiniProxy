@@ -243,10 +243,11 @@ class Message(tk.Text):
         self.config(state=tk.DISABLED)
         self._i = 0
 
-    def write(self, msg):
+    def write(self, msg: str, end: str = "\n"):
+        msg = msg.strip()
         self.config(state=tk.NORMAL)
 
-        self.insert(tk.END, f"{self._i:0>3}| {msg}")
+        self.insert(tk.END, f"{self._i:0>3}| {msg}{end}")
         self.update()
 
         self.config(state=tk.DISABLED)

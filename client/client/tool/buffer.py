@@ -1,4 +1,7 @@
-class Buffer(object):
+import typing
+
+
+class BinaryBuffer(object):
 
     def __init__(self, static: bool = False, size: int | None = None):
         self._static: bool = static
@@ -31,7 +34,7 @@ class Buffer(object):
         else:
             raise ValueError("static buffer changed its size")
 
-    def put(self, data: bytes, errors: str = "strict") -> bytes | None:
+    def put(self, data: bytes, errors: typing.Literal["strict", "return", "ignore"] = "strict") -> bytes | None:
         """put data in the buffer and mark its length"""
         self._data_len += len(data)
 

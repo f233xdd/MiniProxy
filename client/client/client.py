@@ -19,8 +19,8 @@ send_data_log: BufferedWriter | None = None
 
 class Client(object):
     """the part which connected with a server, provide two queues to pass data"""
-    _data_queue_1 = queue.Queue()  # for data from java to server
-    _data_queue_2 = queue.Queue()  # for data from server to java
+    _queue_to_server = queue.Queue()  # for data from local to server
+    _queue_to_local = queue.Queue()  # for data from server to local
 
     def __init__(self, server_addr: tuple[str, int]):
         self.server_addr = server_addr
@@ -28,8 +28,8 @@ class Client(object):
         self._encoding = 'utf_8'
         self._server: socket.socket
 
-        self._data_buf = tool.Buffer()
-        self._header_buf = tool.Buffer(static=True, size=4)
+        self._data_buf = tool.BinaryBuffer()
+        self._header_buf = tool.BinaryBuffer(static=True, size=4)
 
         self.__create_socket()
 
@@ -40,9 +40,10 @@ class Client(object):
 
         data = self._server.recv(MAX_LENGTH)
         print(data.decode(self._encoding))
+
         log.info("Connect server.")
 
-    def get_data(self):
+    def get_server_data(self):
         """get data from server"""
         while True:
             data = self._server.recv(MAX_LENGTH)
@@ -78,13 +79,13 @@ class Client(object):
                         data = self._data_buf.put(data, errors="return")
 
                     if self._data_buf.is_full:
-                        d = self._data_buf.get(reset_size=True)
+                        sorted_data = self._data_buf.get(reset_size=True)
 
-                        msg = tool.message(d, log_content, log_length, add_msg="Put")
+                        msg = tool.message(sorted_data, log_content, log_length, add_msg="Put")
                         if msg:
                             log.debug(msg)
 
-                        self._data_queue_2.put(d)
+                        self._queue_to_local.put(sorted_data)
 
                     else:
                         break
@@ -98,18 +99,18 @@ class Client(object):
                         data = self._data_buf.put(data, errors="return")
 
                         if self._data_buf.is_full:
-                            d = self._data_buf.get(reset_size=True)
+                            sorted_data = self._data_buf.get(reset_size=True)
 
-                            msg = tool.message(d, log_content, log_length, add_msg="Put")
+                            msg = tool.message(sorted_data, log_content, log_length, add_msg="Put")
                             if msg:
                                 log.debug(msg)
 
-                            self._data_queue_2.put(d)
+                            self._queue_to_local.put(sorted_data)
 
-    def send_data(self):
+    def send_server_data(self):
         """send data to server"""
         while True:
-            data = self._data_queue_1.get()
+            data = self._queue_to_server.get()
             if data:
                 data = b"".join([struct.pack('i', len(data)), data])
                 self._server.sendall(data)
