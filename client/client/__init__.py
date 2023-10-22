@@ -6,11 +6,13 @@ from .client import Client
 from .host_client import HostClient
 from .visitor_client import VisitClient
 
-from .tool import get_logger
+from .tool import get_logger, crypto_available
 
 __all__ = ["Client", "HostClient", "VisitClient",
+           "_init_host_execute", "_init_host_log",
+           "_init_visitor_execute", "_init_visitor_log",
            "server_addr", "open_port", "virtual_port",
-           "conf", "_init_host_log", "_init_visitor_log"]
+           "conf", "crypto_available"]
 
 HOST = "host"
 VISITOR = "visitor"
@@ -55,6 +57,9 @@ class Config:
         self._f_conf.close()
 
     def __getitem__(self, keys):
+        if isinstance(keys, str):
+            keys = (keys,)
+
         v = self._conf
 
         for k in keys:
@@ -75,6 +80,12 @@ class ClientConfig(Config):
         elif func == VISITOR:
             return ((self[VISITOR, "server_address", "internet_ip"], self[VISITOR, "server_address", "port"]),
                     self[VISITOR, "virtual_open_port"])
+
+    def __getitem__(self, keys):
+        if keys == "crypto" and not crypto_available:
+            return False
+        else:
+            return super().__getitem__(keys)
 
 
 conf = ClientConfig(local_path + "/config.json")

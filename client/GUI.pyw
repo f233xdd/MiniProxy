@@ -147,8 +147,10 @@ class OptionFrame(ttk.Frame):
 
         self.__init_option()
         #  TODO: ensure whether module is installed
-        self._check_button = tk.Checkbutton(self, text="Crypto",
-                                            command=lambda: messagebox.showinfo(title="Info", message="Unavailable"))
+        if not client.crypto_available:
+            self._check_button = tk.Checkbutton(self, text="Crypto", state="disabled")
+        else:
+            self._check_button = tk.Checkbutton(self, text="Crypto")
 
         self._check_button.grid(row=10, column=0)
         self._pipe = msg_pipe

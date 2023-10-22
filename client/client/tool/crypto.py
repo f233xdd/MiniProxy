@@ -21,14 +21,16 @@ class RSA:
             mgf=padding.MGF1(hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None
-        ))
+        )
+                                            )
 
     def decrypt(self, msg: bytes) -> bytes:
         return self.__private_key.decrypt(msg, padding=padding.OAEP(
             mgf=padding.MGF1(hashes.SHA256()),
             algorithm=hashes.SHA256(),
             label=None
-        ))
+        )
+                                          )
 
     def get_public_key(self) -> bytes:
         return self.__public_key.public_bytes(

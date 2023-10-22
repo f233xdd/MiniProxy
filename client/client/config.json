@@ -30,5 +30,6 @@
       "port": 25566
     },
     "virtual_open_port": 9998
-  }
+  },
+  "crypto": true
 }

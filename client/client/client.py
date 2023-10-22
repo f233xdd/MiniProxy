@@ -5,6 +5,7 @@ import logging
 import struct
 from io import BufferedWriter
 
+import client
 from . import tool
 
 MAX_LENGTH: int | None = None
@@ -19,8 +20,6 @@ send_data_log: BufferedWriter | None = None
 
 class Client(object):
     """the part which connected with a server, provide two queues to pass data"""
-    _queue_to_server = queue.Queue()  # for data from local to server
-    _queue_to_local = queue.Queue()  # for data from server to local
 
     def __init__(self, server_addr: tuple[str, int]):
         self.server_addr = server_addr
@@ -28,8 +27,18 @@ class Client(object):
         self._encoding = 'utf_8'
         self._server: socket.socket
 
+        self._queue_to_server = queue.Queue()  # for data from local to server
+        self._queue_to_local = queue.Queue()  # for data from server to local
+
         self._data_buf = tool.BinaryBuffer()
         self._header_buf = tool.BinaryBuffer(static=True, size=4)
+
+        if client.conf["crypto"] and tool.crypto_available:
+            rsa = tool.RSA()  # TODO: get public key and encrypt data
+        else:
+            rsa = None
+
+        print(rsa)
 
         self.__create_socket()
 

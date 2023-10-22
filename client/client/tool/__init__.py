@@ -8,4 +8,6 @@ try:
 except ImportError:
     crypto_available = False
 
-__all__ = ["BinaryBuffer", "get_logger", "message"]
+__all__ = ["BinaryBuffer", "RSA",
+           "get_logger", "message",
+           "crypto_available"]
