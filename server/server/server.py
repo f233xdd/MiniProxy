@@ -125,8 +125,9 @@ class Server(object):
 
             log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._ip)
 
-    def start(self, deque):
-        self.data_queue = deque
+    def start(self, deque=None):
+        if deque:
+            self.data_queue = deque
 
         while True:
             self.__link_to_client()
