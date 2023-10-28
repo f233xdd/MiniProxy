@@ -22,7 +22,7 @@ class TaskManager:
         if self._mutex:
             for k in self._tasks.keys():
                 if self.is_task_running(k) and k != flag:
-                    print(f"mutex: {flag}")
+                    print(f"mutex lock")
                     return -2  # not run for mutex
 
         if self._tasks[flag].running_count < self._max_t:
@@ -32,7 +32,7 @@ class TaskManager:
                 self._tasks[flag].run(by_saved_args=True)
 
         else:
-            print(f"count: {flag}, {self._max_t}, {self._tasks[flag]}")
+            print(f"tick lock")
             return -1  # not run for max tick
 
     def cancel_task(self, flag: int):

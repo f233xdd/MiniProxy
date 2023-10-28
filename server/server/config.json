@@ -9,7 +9,7 @@
   },
   "debug": {
     "file_log": true,
-    "clear_log": true,
+    "clear_log": false,
     "console": {
       "length": true,
       "content": false

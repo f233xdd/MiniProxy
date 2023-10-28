@@ -32,7 +32,7 @@ class Client(object):
         self.__tcp_data_analyser = tool.TCPDataAnalyser()
         self.__tcp_data_packer = tool.TCPDataPacker()
 
-        if client.conf["crypto"] and tool.crypto_available:
+        if client.conf["crypto"] and tool.crypt_available:
             __rsa = tool.RSA()  # TODO: get public key and encrypt data
         else:
             __rsa = None
@@ -56,7 +56,7 @@ class Client(object):
         while True:
             data = self.__server.recv(MAX_LENGTH)
 
-            msg = tool.message(data, log_content, log_length, add_msg="All")
+            msg = tool.message(data, log_content, log_length, add_msg="Total")
             if msg:
                 log.debug(msg)
 
@@ -64,6 +64,7 @@ class Client(object):
 
             for sorted_data in self.__tcp_data_analyser.packages:
                 self._queue_to_local.put(sorted_data)
+                log.debug(f"analyse data [{len(sorted_data)}]")
 
                 # recv_data_log.write(sorted_data)
                 # recv_data_log.write(b'\n')
@@ -76,6 +77,7 @@ class Client(object):
                 self.__tcp_data_packer.put(data)
 
                 for sorted_data in self.__tcp_data_packer.packages:
+                    log.debug(f"pack data [{len(sorted_data)}]")
                     self.__server.sendall(sorted_data)
 
                     msg = tool.message(sorted_data, log_content, log_length)

@@ -16,6 +16,17 @@ addr = (socket.gethostname(), 9998)
 _log = log.create_logger("MC_visitor", log_file="mc_visitor.log")
 
 
+def average_calc():
+    total = 0
+    count = 0
+    average = 0
+    while True:
+        num = yield average
+        count += 1
+        total += num
+        average = total / count
+
+
 def check(recv_data: bytes, complete: bytes) -> float:
     return len(recv_data) / len(complete) * 100
 
@@ -37,6 +48,8 @@ def send():
 
 
 def recv():
+    a = average_calc()
+    res = next(a)
     try:
         i = 0
         while True:
@@ -48,10 +61,12 @@ def recv():
                 offset = check(recv_data[:MAX_LENGTH], bag)
                 send_time = struct.unpack('d', recv_data[MAX_LENGTH:])[0]
                 delay = round(recv_time - send_time, 3) * 1000
+                res = a.send((recv_time - send_time) * 1000)
 
                 _log.info(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
                 i += 1
             else:
+                _log.info(f"offset: {round(res, 3)} on average")
                 break
     except Exception as e:
         _log.error(len(recv_data))

@@ -11,13 +11,12 @@ log: logging.Logger | None = None
 
 class HostClient(client.Client):
 
-    def __init__(self, server_addr: tuple[str, int], mc_port: int):
+    def __init__(self, server_addr: tuple[str, int], local_port: int, is_crypt: bool = False):
         super().__init__(server_addr)
+        self.__is_crypt = is_crypt  # TODO: crypt
 
-        self.local_port = mc_port
+        self.local_port = local_port
         self.__virtual_client: socket.socket
-        # self._send_func_alive: bool | None = None
-        # self._get_func_alive: bool | None = None
 
     def __connect_local(self):
         """connect with local as a guest"""

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from client import conf, crypto_available
+from client import conf, crypt_available
 from host_main import start as h_start
 from guest_main import start as v_start
 from gui_component import *
@@ -37,7 +37,7 @@ class MainWindow(tk.Tk):
             GUEST: ClientFrame(self._task_manager, v_start, GUEST, conf,
                                self._str_var[GUEST], self._msg_pipe[GUEST],
                                borderwidth=0),
-            OPTION: OptionFrame(self._task_manager, conf, crypto_available, self._msg_pipe, borderwidth=1),
+            OPTION: OptionFrame(self._task_manager, conf, crypt_available, self._msg_pipe, borderwidth=1),
         }
 
         self._notebook.add(self._frame[HOST], text=HOST)

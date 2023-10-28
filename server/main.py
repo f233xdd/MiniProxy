@@ -1,5 +1,5 @@
 # run this file to start a server
-import threading
+import multiprocessing
 
 from server import *
 
@@ -11,13 +11,16 @@ def main():
     print("Done!")
 
     print("Create threads.", end='... ')
-    thread_1 = threading.Thread(target=server_1.start)
-    thread_2 = threading.Thread(target=server_2.start)
+    thread_1 = multiprocessing.Process(target=server_1.start, args=(server_1.data_queue,))
+    thread_2 = multiprocessing.Process(target=server_2.start, args=(server_2.data_queue,))
     print("Done!")  # rebuild with process
 
     thread_1.start()
     thread_2.start()
     print("Server is running!\n")
+
+    thread_1.join()
+    thread_2.join()
 
 
 if __name__ == "__main__":

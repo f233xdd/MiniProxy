@@ -20,14 +20,14 @@ class ClientOffLineError(Exception):
 
 
 class Server(object):
-    _data_queue = DoubleQueue()
+    data_queue = DoubleQueue()
 
     def __init__(self, host: str, port: int):
 
         self._ip = {'port': f"{port}"}
         self._port = port  # work as a port and a queue flag
 
-        self._data_queue.add_flag(port)
+        self.data_queue.add_flag(port)
 
         self._get_data_alive = None
 
@@ -72,7 +72,10 @@ class Server(object):
                     log.debug(msg, extra=self._ip)
 
                 if data:
-                    self._data_queue.put(data, self._port, exchange=True)
+                    # log.debug("Before put", extra=self._ip)
+                    self.data_queue.put(data, self._port, exchange=True)
+                    # log.debug("After put", extra=self._ip)
+
 
         except ConnectionError as e:
             if e is ConnectionResetError:
@@ -92,8 +95,11 @@ class Server(object):
         try:
             while True:
                 try:
-                    data = self._data_queue.get(self._port, timeout=2)
+                    # log.debug("Before get", extra=self._ip)
+                    data = self.data_queue.get(self._port, timeout=2)
+                    # log.debug("After get", extra=self._ip)
                 except queue.Empty:
+                    # log.debug("Get timeout", extra=self._ip)
                     if self._get_data_alive is False:
                         log.warning("[TimeoutError] func is down", extra=self._ip)
                         break
@@ -119,7 +125,9 @@ class Server(object):
 
             log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._ip)
 
-    def start(self):
+    def start(self, deque):
+        self.data_queue = deque
+
         while True:
             self.__link_to_client()
 

@@ -8,9 +8,9 @@ def get_logger(name, log_file: str = ''):
 
     formatter = logging.Formatter(format_msg, format_time)
 
-    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
 
     log = logging.getLogger(name)
     log.setLevel(logging.DEBUG)

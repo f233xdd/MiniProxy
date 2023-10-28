@@ -8,7 +8,6 @@ from .infer_tool import verify_ip, verify_port
 
 HOST = "host"
 GUEST = "guest"
-OPTION = "option"
 
 
 class ClientFrame(ttk.Frame):
@@ -110,7 +109,7 @@ class OptionFrame(ttk.Frame):
         }
 
         self.__init_option()
-        #  TODO: ensure whether module is installed
+
         if not crypto_available:
             self._check_button = tk.Checkbutton(self, text="Crypto", state="disabled")
         else:

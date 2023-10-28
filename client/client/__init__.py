@@ -6,13 +6,13 @@ from .client import Client
 from .host_client import HostClient
 from .guest_client import GuestClient
 
-from .tool import get_logger, crypto_available
+from .tool import get_logger, crypt_available
 
 __all__ = ["Client", "HostClient", "GuestClient",
            "_init_host_execute", "_init_host_log",
            "_init_guest_execute", "_init_guest_log",
            "server_addr", "open_port", "virtual_port",
-           "conf", "crypto_available"]
+           "conf", "crypt_available"]
 
 HOST = "host"
 GUEST = "guest"
@@ -82,7 +82,7 @@ class ClientConfig(Config):
                     self[GUEST, "virtual_open_port"])
 
     def __getitem__(self, keys):
-        if keys == "crypto" and not crypto_available:
+        if keys == "crypto" and not crypt_available:
             return False
         else:
             return super().__getitem__(keys)

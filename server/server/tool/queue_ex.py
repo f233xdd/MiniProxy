@@ -1,4 +1,5 @@
 import queue
+import multiprocessing
 import typing
 
 
@@ -6,8 +7,8 @@ class DoubleQueue(object):
     """It provide a exchange queue, suit for two."""
 
     def __init__(self):
-        self._queue_1 = queue.Queue()
-        self._queue_2 = queue.Queue()
+        self._queue_1 = multiprocessing.Queue()
+        self._queue_2 = multiprocessing.Queue()
 
         self._flag_1: int | None = None
         self._flag_2: int | None = None
