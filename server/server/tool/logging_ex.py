@@ -17,7 +17,7 @@ def get_logger(name, log_file: str = ''):
     log.addHandler(console_handler)
 
     if log_file:
-        _file_handler = logging.FileHandler(log_file, mode='a+', encoding='utf-8')
+        _file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
         _file_handler.setFormatter(formatter)
         _file_handler.setLevel(logging.DEBUG)
 

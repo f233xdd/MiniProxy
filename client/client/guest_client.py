@@ -9,7 +9,7 @@ from . import client, tool
 log: logging.Logger | None = None
 
 
-class VisitClient(client.Client):
+class GuestClient(client.Client):
 
     def __init__(self, server_addr: tuple[str, int], virtual_server_port: int):
         super().__init__(server_addr)

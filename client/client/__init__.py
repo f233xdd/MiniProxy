@@ -4,20 +4,20 @@ import copy
 
 from .client import Client
 from .host_client import HostClient
-from .visitor_client import VisitClient
+from .guest_client import GuestClient
 
 from .tool import get_logger, crypto_available
 
-__all__ = ["Client", "HostClient", "VisitClient",
+__all__ = ["Client", "HostClient", "GuestClient",
            "_init_host_execute", "_init_host_log",
-           "_init_visitor_execute", "_init_visitor_log",
+           "_init_guest_execute", "_init_guest_log",
            "server_addr", "open_port", "virtual_port",
            "conf", "crypto_available"]
 
 HOST = "host"
-VISITOR = "visitor"
+GUEST = "guest"
 
-server_addr: dict[str: tuple[str, int], str: tuple[str, int]] = {"host": ('', 0), "visitor": ('', 0)}
+server_addr: dict[str: tuple[str, int], str: tuple[str, int]] = {"host": ('', 0), "guest": ('', 0)}
 open_port: int | None = None
 virtual_port: int | None = None
 
@@ -77,9 +77,9 @@ class ClientConfig(Config):
         if func == HOST:
             return ((self[HOST, "server_address", "internet_ip"], self[HOST, "server_address", "port"]),
                     self[HOST, "open_port"])
-        elif func == VISITOR:
-            return ((self[VISITOR, "server_address", "internet_ip"], self[VISITOR, "server_address", "port"]),
-                    self[VISITOR, "virtual_open_port"])
+        elif func == GUEST:
+            return ((self[GUEST, "server_address", "internet_ip"], self[GUEST, "server_address", "port"]),
+                    self[GUEST, "virtual_open_port"])
 
     def __getitem__(self, keys):
         if keys == "crypto" and not crypto_available:
@@ -129,39 +129,39 @@ def _init_host_log(stream):
     # client.send_data_log = open(local_path + "/log/host.send_data", 'wb')
 
 
-def _init_visitor_execute():
+def _init_guest_execute():
     global virtual_port
 
-    client.MAX_LENGTH = conf[VISITOR, "data_max_length"]
+    client.MAX_LENGTH = conf[GUEST, "data_max_length"]
 
-    addr = conf[VISITOR, "server_address"]
-    server_addr[VISITOR] = (addr["internet_ip"], addr["port"])
+    addr = conf[GUEST, "server_address"]
+    server_addr[GUEST] = (addr["internet_ip"], addr["port"])
 
-    virtual_port = conf[VISITOR, "virtual_open_port"]
+    virtual_port = conf[GUEST, "virtual_open_port"]
 
 
-def _init_visitor_log(stream):
-    """set up visitor basic config"""
+def _init_guest_log(stream):
+    """set up guest basic config"""
 
-    client.log_length = conf[VISITOR, "debug", "console", "length"]
-    client.log_content = conf[VISITOR, "debug", "console", "content"]
+    client.log_length = conf[GUEST, "debug", "console", "length"]
+    client.log_content = conf[GUEST, "debug", "console", "content"]
 
-    if conf[VISITOR, "debug", "clear_log"]:
+    if conf[GUEST, "debug", "clear_log"]:
         try:
-            os.remove(local_path + "/log/visitor.log")
-            os.remove(local_path + "/log/visitor.send_data")
-            os.remove(local_path + "/log/visitor.recv_data")
+            os.remove(local_path + "/log/guest.log")
+            os.remove(local_path + "/log/guest.send_data")
+            os.remove(local_path + "/log/guest.recv_data")
         except FileNotFoundError:
             pass
 
-    if conf[VISITOR, "debug", "file_log"]:
-        logger = get_logger(VISITOR, local_path + "/log/visitor.log", stream=stream)
+    if conf[GUEST, "debug", "file_log"]:
+        logger = get_logger(GUEST, local_path + "/log/guest.log", stream=stream)
         client.log = logger
-        visitor_client.log = logger
+        guest_client.log = logger
     else:
-        logger = get_logger(VISITOR, stream=stream)
+        logger = get_logger(GUEST, stream=stream)
         client.log = logger
-        visitor_client.log = logger
+        guest_client.log = logger
 
-    # client.recv_data_log = open(local_path + "/log/visitor.recv_data", 'wb')
-    # client.send_data_log = open(local_path + "/log/visitor.send_data", 'wb')
+    # client.recv_data_log = open(local_path + "/log/guest.recv_data", 'wb')
+    # client.send_data_log = open(local_path + "/log/guest.send_data", 'wb')

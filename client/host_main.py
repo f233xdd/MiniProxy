@@ -5,7 +5,7 @@ import threading
 import client
 
 
-def main(
+def start(
         server_addr: tuple[str, int] | None = None,
         open_port: int | None = None,
         public=None):
@@ -37,6 +37,13 @@ def main(
 
     for thread in threads:
         thread.start()
+
+
+def main(
+        server_addr: tuple[str, int] | None = None,
+        open_port: int | None = None,
+        public=None):
+    start(server_addr, open_port, public)
 
 
 if __name__ == "__main__":

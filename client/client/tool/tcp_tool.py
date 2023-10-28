@@ -1,7 +1,8 @@
+import struct
 import typing
 
 
-class BinaryBuffer(object):
+class BinaryBuffer:
 
     def __init__(self, static: bool = False, size: int | None = None):
         self._static: bool = static
@@ -34,7 +35,7 @@ class BinaryBuffer(object):
         else:
             raise ValueError("static buffer changed its size")
 
-    def put(self, data: bytes, errors: typing.Literal["strict", "return", "ignore"] = "strict") -> bytes | None:
+    def put(self, data: bytes, errors: typing.Literal["strict", "return", "ignore"] = "return") -> bytes | None:
         """put data in the buffer and mark its length"""
         self._data_len += len(data)
 
@@ -99,3 +100,78 @@ class BinaryBuffer(object):
     def __repr__(self):
         """return buffer data for debug"""
         return str(b"".join(self._data_queue))
+
+
+class TCPDataPacker:
+
+    def __init__(self, sort_len: int | None = None):
+        self.__len = sort_len
+
+        self.__packages = []
+        if sort_len:
+            self.__data_buf = BinaryBuffer(static=True, size=self.__len)
+
+    def put(self, data: bytes):
+        if data:
+            data = b"".join([struct.pack('i', len(data)), data])
+
+            if self.__len:
+                while data:
+                    data = self.__data_buf.put(data)
+                    sorted_data = self.__data_buf.get()
+
+                    if sorted_data:
+                        self.__packages.append(sorted_data)
+            else:
+                self.__packages.append(data)
+
+    @property
+    def packages(self) -> typing.Generator:
+        try:
+            while True:
+                yield self.__packages.pop(0)
+        except IndexError:
+            pass
+
+
+class TCPDataAnalyser:
+
+    def __init__(self):
+        self.__packages = []
+
+        self.__data_buf = BinaryBuffer()
+        self.__header_buf = BinaryBuffer(static=True, size=4)
+
+    def put(self, data: bytes):
+        while data:
+            if self.__data_buf.is_empty and self.__data_buf.size is None:
+                data = self.__header_buf.put(data)
+                header = self.__header_buf.get()
+
+                if header:
+                    size = struct.unpack('i', header)[0]
+                    # print(f"Set {size}")
+                    self.__data_buf.set_size(size)
+                else:
+                    continue
+
+            elif self.__data_buf.is_full:
+                sorted_data = self.__data_buf.get(reset_size=True)
+                # print(f"Put {len(sorted_data)})")
+                self.__packages.append(sorted_data)
+
+            else:
+                data = self.__data_buf.put(data)
+
+        else:
+            sorted_data = self.__data_buf.get(reset_size=True)
+            if sorted_data:
+                self.__packages.append(sorted_data)
+
+    @property
+    def packages(self) -> typing.Generator:
+        try:
+            while True:
+                yield self.__packages.pop(0)
+        except IndexError:
+            pass

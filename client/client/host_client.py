@@ -14,16 +14,16 @@ class HostClient(client.Client):
     def __init__(self, server_addr: tuple[str, int], mc_port: int):
         super().__init__(server_addr)
 
-        self._me_port = mc_port
-        self._virtual_client: socket.socket
-        self._send_func_alive: bool | None = None
-        self._get_func_alive: bool | None = None
+        self.local_port = mc_port
+        self.__virtual_client: socket.socket
+        # self._send_func_alive: bool | None = None
+        # self._get_func_alive: bool | None = None
 
     def __connect_local(self):
         """connect with local as a guest"""
-        self._virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self._virtual_client.connect((socket.gethostname(), self._me_port))
+            self.__virtual_client.connect((socket.gethostname(), self.local_port))
             log.info("local server connected")
         except ConnectionError as error:
             log.error(f"failed to connect with local server: {error}")
@@ -31,7 +31,7 @@ class HostClient(client.Client):
 
     def __send_local_data(self):
         """send data to local"""
-        self._send_func_alive = True
+        # self._send_func_alive = True
 
         try:
             while True:
@@ -39,19 +39,20 @@ class HostClient(client.Client):
                     data = self._queue_to_local.get(timeout=2)
 
                 except queue.Empty:
-                    if self._get_func_alive is False:
-                        self._send_func_alive = False
-                        log.warning("interrupt for get func(timeout)")
-                        break
-                    else:
-                        continue
+                    continue
+                    # if self._get_func_alive is False:
+                    #     self._send_func_alive = False
+                    #     log.warning("interrupt for get func(timeout)")
+                    #     break
+                    # else:
+                    #     continue
 
-                if self._get_func_alive is False:
-                    self._send_func_alive = False
-                    log.warning("interrupt for get func")
-                    break
+                # if self._get_func_alive is False:
+                #     self._send_func_alive = False
+                #     log.warning("interrupt for get func")
+                #     break
 
-                self._virtual_client.sendall(data)
+                self.__virtual_client.sendall(data)
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
@@ -59,28 +60,29 @@ class HostClient(client.Client):
 
         except ConnectionError as error:
             log.error(f"{error}")
-            self._send_func_alive = False
+            # self._send_func_alive = False
 
     def __get_local_data(self):
         """get data from local"""
-        self._get_func_alive = True
+        # self._get_func_alive = True
 
         try:
             while True:
                 try:
-                    data = self._virtual_client.recv(client.MAX_LENGTH)
+                    data = self.__virtual_client.recv(client.MAX_LENGTH)
                 except TimeoutError:
-                    if self._send_func_alive is False:
-                        self._get_func_alive = False
-                        log.warning("interrupt for send func(timeout)")
-                        break
-                    else:
-                        continue
+                    continue
+                    # if self._send_func_alive is False:
+                    #     self._get_func_alive = False
+                    #     log.warning("interrupt for send func(timeout)")
+                    #     break
+                    # else:
+                    #     continue
 
-                if self._send_func_alive is False:
-                    self._get_func_alive = False
-                    log.warning("interrupt for send func")
-                    break
+                # if self._send_func_alive is False:
+                #     self._get_func_alive = False
+                #     log.warning("interrupt for send func")
+                #     break
 
                 self._queue_to_server.put(data)
 
@@ -90,7 +92,7 @@ class HostClient(client.Client):
 
         except ConnectionError as error:
             log.error(f"{error}")
-            self._get_func_alive = False
+            # self._get_func_alive = False
 
     def local_client_main(self):
         functions = [self.__send_local_data, self.__get_local_data]
