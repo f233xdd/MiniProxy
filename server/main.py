@@ -1,26 +1,39 @@
 # run this file to start a server
 import multiprocessing
+import time
 
 from server import *
 
 
-def main():
+def start_server():
     print("Initialize ServerPort.", end='... ')
-    server_1 = Server(local_addr[0], local_addr[1][0])
-    server_2 = Server(local_addr[0], local_addr[1][1])
+    server_1 = Server(local_ip, local_ports[0])
+    server_2 = Server(local_ip, local_ports[1])
     print("Done!")
 
     print("Create threads.", end='... ')
-    thread_1 = multiprocessing.Process(target=server_1.start, args=(server_1.data_queue,))
-    thread_2 = multiprocessing.Process(target=server_2.start, args=(server_2.data_queue,))
-    print("Done!")  # rebuild with process
+    process_1 = multiprocessing.Process(target=server_1.start, args=(server_1.data_queue,))
+    process_2 = multiprocessing.Process(target=server_2.start, args=(server_2.data_queue,))
+    print("Done!")
 
-    thread_1.start()
-    thread_2.start()
+    process_1.start()
+    process_2.start()
     print("Server is running!\n")
 
-    thread_1.join()
-    thread_2.join()
+    return [process_1, process_2]
+
+
+def main():
+    prc = start_server()
+
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        for p in prc:
+            p.terminate()
+
+    print("Canceled by [Ctrl-C]")
 
 
 if __name__ == "__main__":

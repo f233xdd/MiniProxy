@@ -2,6 +2,7 @@
 import queue
 import socket
 import logging
+import sys
 from io import BufferedWriter
 
 import client
@@ -32,24 +33,26 @@ class Client(object):
         self.__tcp_data_analyser = tool.TCPDataAnalyser()
         self.__tcp_data_packer = tool.TCPDataPacker()
 
-        if client.conf["crypto"] and tool.crypt_available:
+        if client.conf["crypt"] and tool.crypt_available:
             __rsa = tool.RSA()  # TODO: get public key and encrypt data
         else:
             __rsa = None
-
-        print(__rsa)
 
         self.__create_socket()
 
     def __create_socket(self):
         """connect to server"""
-        self.__server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__server.connect(self.server_addr)
+        try:
+            self.__server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.__server.connect(self.server_addr)
 
-        data = self.__server.recv(MAX_LENGTH)
-        print(data.decode(self.encoding))
+            data = self.__server.recv(MAX_LENGTH)
+            print(data.decode(self.encoding))
 
-        log.info("Connect server.")
+            log.info("Connect server.")
+        except ConnectionError as e:
+            log.error(e)
+            sys.exit(-1)
 
     def get_server_data(self):
         """get data from server"""

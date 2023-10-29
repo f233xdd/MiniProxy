@@ -1,6 +1,7 @@
 # run this file to start your visitor client
 import sys
 import threading
+import time
 
 import client
 
@@ -26,15 +27,11 @@ def start(
     else:
         client._init_guest_log(sys.stderr)
 
-    try:
-        guest = client.GuestClient(addr, port)
-    except ConnectionRefusedError as e:
-        client.client.log.error(e)
-        sys.exit(-1)
+    guest = client.GuestClient(addr, port)
 
     functions = [guest.send_server_data, guest.get_server_data, guest.local_server_main]
 
-    threads = [threading.Thread(target=func) for func in functions]
+    threads = [threading.Thread(target=func, daemon=True) for func in functions]
 
     for thread in threads:
         thread.start()
@@ -44,6 +41,12 @@ def main(server_addr: tuple[str, int] | None = None,
          virtual_port: int | None = None,
          public=None):
     start(server_addr, virtual_port, public)
+
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("Canceled by [Ctrl-C]")
 
 
 if __name__ == "__main__":

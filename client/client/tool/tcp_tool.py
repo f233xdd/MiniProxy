@@ -127,11 +127,7 @@ class TCPDataPacker:
 
     @property
     def packages(self) -> typing.Generator:
-        try:
-            while True:
-                yield self.__packages.pop(0)
-        except IndexError:
-            pass
+        yield from self.__packages
 
 
 class TCPDataAnalyser:
@@ -170,8 +166,4 @@ class TCPDataAnalyser:
 
     @property
     def packages(self) -> typing.Generator:
-        try:
-            while True:
-                yield self.__packages.pop(0)
-        except IndexError:
-            pass
+        yield from self.__packages

@@ -1,6 +1,7 @@
 # run this file to start your host client
 import sys
 import threading
+import time
 
 import client
 
@@ -25,11 +26,7 @@ def start(
     else:
         client._init_host_log(sys.stderr)
 
-    try:
-        host = client.HostClient(addr, port)
-    except ConnectionRefusedError as e:
-        client.client.log.error(e)
-        sys.exit(-1)
+    host = client.HostClient(addr, port)
 
     functions = [host.send_server_data, host.get_server_data, host.local_client_main]
 
@@ -44,6 +41,12 @@ def main(
         open_port: int | None = None,
         public=None):
     start(server_addr, open_port, public)
+
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("Canceled by [Ctrl-C]")
 
 
 if __name__ == "__main__":

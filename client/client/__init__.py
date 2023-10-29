@@ -82,7 +82,7 @@ class ClientConfig(Config):
                     self[GUEST, "virtual_open_port"])
 
     def __getitem__(self, keys):
-        if keys == "crypto" and not crypt_available:
+        if keys == "crypt" and not crypt_available:
             return False
         else:
             return super().__getitem__(keys)
