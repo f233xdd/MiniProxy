@@ -11,8 +11,8 @@
     "file_log": true,
     "clear_log": true,
     "console": {
-      "length": true,
-      "content": true
+      "length": false,
+      "content": false
     }
   }
 }

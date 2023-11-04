@@ -55,7 +55,7 @@ class ClientFrame(ttk.Frame):
 
         self.__pack_up()
 
-        thd = threading.Thread(target=self.__get_msg)
+        thd = threading.Thread(target=self.__get_msg, daemon=True)
         thd.start()
 
     def __pack_up(self):
@@ -69,11 +69,14 @@ class ClientFrame(ttk.Frame):
 
     def __get_msg(self):
         total = ''
-        while True:
-            msg = self.__msg_pipe.read()
-            total = ''.join([total, msg, ' '])
+        try:
+            while True:
+                msg = self.__msg_pipe.read()
+                total = ''.join([total, msg, ' '])
 
-            self.__text.write(msg)
+                self.__text.write(msg)
+        except BrokenPipeError:
+            pass
 
 
 class OptionFrame(ttk.Frame):

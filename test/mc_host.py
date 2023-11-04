@@ -6,10 +6,10 @@ import struct
 import log
 
 data: bytes = (
-        b"\x00" * 64
+        b"\x00" * 32
 )
 # 131072
-MAX_LENGTH = 512
+MAX_LENGTH = 131072
 addr = (socket.gethostname(), 9999)
 _log = log.create_logger("MC_host", log_file="mc_host.log")
 
@@ -64,7 +64,7 @@ def recv():
                 _log.info(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
                 i += 1
             else:
-                _log.info(f"offset: {round(res, 3)} on average")
+                _log.info(f"offset: {round(res, 3)}ms on average")
                 break
     except Exception as e:
         _log.error(len(recv_data))
@@ -77,7 +77,7 @@ def init():
     server.listen(1)
     _client, __ = server.accept()
 
-    _bag: bytes = data * int(MAX_LENGTH / 64)
+    _bag: bytes = data * int(MAX_LENGTH / 32)
     _client.sendall(struct.pack('i', MAX_LENGTH))
 
     return _client, _bag

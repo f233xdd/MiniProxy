@@ -55,7 +55,6 @@ class Client(object):
 
             self.log.info("Connect server")
         except ConnectionError as e:
-            # tool.ex_stream.write("test case")
             self.log.error(e)
             sys.exit(-1)
 
@@ -89,7 +88,7 @@ class Client(object):
                     sorted_data = self.__rsa.decrypt(sorted_data)
 
                 self._queue_to_local.put(sorted_data)
-                self.log.debug(f"analyse data [{len(sorted_data)}]: {sorted_data}")
+                self.log.debug(f"analyse data [{len(sorted_data)}]")
 
                 # recv_data_log.write(sorted_data)
                 # recv_data_log.write(b'\n')

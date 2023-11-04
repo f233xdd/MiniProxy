@@ -12,7 +12,7 @@ import log
 # )
 
 data: bytes = (
-        b"\x00" * 64
+        b"\x00" * 32
 )
 
 MAX_LENGTH = None
@@ -70,7 +70,7 @@ def recv():
                 _log.info(f"recv data[{i}] | offset: {offset}% | delay: {delay}ms")
                 i += 1
             else:
-                _log.info(f"offset: {round(res, 3)} on average")
+                _log.info(f"offset: {round(res, 3)}ms on average")
                 break
     except Exception as e:
         _log.error(len(recv_data))
@@ -84,7 +84,7 @@ def init():
     d = _client.recv(1024)
     _MAX_LENGTH = struct.unpack('i', d)[0]
     print(_MAX_LENGTH)
-    _bag: bytes = data * int(_MAX_LENGTH / 64)
+    _bag: bytes = data * int(_MAX_LENGTH / 32)
 
     return _client, _bag, _MAX_LENGTH
 

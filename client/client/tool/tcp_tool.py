@@ -128,6 +128,10 @@ class TCPDataPacker:
     @property
     def packages(self) -> typing.Generator:
         yield from self.__packages
+        self.__packages.clear()
+
+    def __repr__(self):
+        return str(self.__packages)
 
 
 class TCPDataAnalyser:
@@ -167,3 +171,7 @@ class TCPDataAnalyser:
     @property
     def packages(self) -> typing.Generator:
         yield from self.__packages
+        self.__packages.clear()
+
+    def __repr__(self):
+        return str(self.__packages)

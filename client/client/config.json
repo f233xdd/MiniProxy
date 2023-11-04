@@ -6,7 +6,7 @@
       "clear_log": true,
       "console": {
         "content": false,
-        "length": true
+        "length": false
       },
       "file_log": true
     },
@@ -22,7 +22,7 @@
       "clear_log": true,
       "console": {
         "content": false,
-        "length": true
+        "length": false
       },
       "file_log": true
     },
