@@ -1,5 +1,4 @@
 # run this file to start your visitor client
-import sys
 import threading
 import time
 
@@ -9,7 +8,8 @@ import client
 def start(
         server_addr: tuple[str, int] | None = None,
         virtual_port: int | None = None,
-        public=None):
+        public=None,
+        daemon=False):
     client._init_guest_execute()
 
     if server_addr:
@@ -23,15 +23,18 @@ def start(
         port = client.virtual_port
 
     if public:
-        client._init_guest_log(public)
+        log = client._init_guest_log(public)
     else:
-        client._init_guest_log(sys.stderr)
+        log = client._init_guest_log()
 
-    guest = client.GuestClient(addr, port)
+    guest = client.GuestClient(addr, port, False, log)
 
     functions = [guest.send_server_data, guest.get_server_data, guest.local_server_main]
 
-    threads = [threading.Thread(target=func, daemon=True) for func in functions]
+    if __name__ == "__main__":
+        daemon = True
+
+    threads = [threading.Thread(target=func, daemon=daemon) for func in functions]
 
     for thread in threads:
         thread.start()

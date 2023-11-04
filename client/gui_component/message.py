@@ -27,10 +27,15 @@ class Message(tk.Text):
 class MessagePipe:
 
     def __init__(self):
-        self._queue = multiprocessing.Queue()
+        self._queue = multiprocessing.Manager().Queue()
+        # self._queue = multiprocessing.Queue()
 
     def write(self, msg):
         self._queue.put(msg)
 
     def read(self, block: bool = True):
-        return self._queue.get(block=block)
+        msg = self._queue.get(block=block)
+        return msg
+
+    def __repr__(self):
+        return "MessagePipe: " + self._queue.__repr__()

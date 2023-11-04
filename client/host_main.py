@@ -1,5 +1,4 @@
 # run this file to start your host client
-import sys
 import threading
 import time
 
@@ -9,7 +8,8 @@ import client
 def start(
         server_addr: tuple[str, int] | None = None,
         open_port: int | None = None,
-        public=None):
+        public=None,
+        daemon=False):
     client._init_host_execute()
     if server_addr:
         addr = server_addr
@@ -22,15 +22,18 @@ def start(
         port = client.open_port
 
     if public:
-        client._init_host_log(public)
+        log = client._init_host_log(public)
     else:
-        client._init_host_log(sys.stderr)
+        log = client._init_host_log()
 
-    host = client.HostClient(addr, port)
+    host = client.HostClient(addr, port, False, log)
 
     functions = [host.send_server_data, host.get_server_data, host.local_client_main]
 
-    threads = [threading.Thread(target=func) for func in functions]
+    if __name__ == "__main__":
+        daemon = True
+
+    threads = [threading.Thread(target=func, daemon=daemon) for func in functions]
 
     for thread in threads:
         thread.start()

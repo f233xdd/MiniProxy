@@ -5,31 +5,31 @@ import typing
 class TaskManager:
 
     def __init__(self, times: int = 1, mutex: bool = True):
-        self._tasks: dict[str: Task] = {}
+        self.__tasks: dict[str: Task] = {}
 
-        self._max_t: int = times
-        self._mutex: bool = mutex
+        self.__max_t: int = times
+        self.__mutex: bool = mutex
 
     def add_task(self, func: typing.Callable, flag: str, args: tuple, kwargs: dict | None = None):
         if kwargs is None:
             kwargs = {}
 
-        self._tasks[flag] = Task(func, args, kwargs)
+        self.__tasks[flag] = Task(func, args, kwargs)
 
     def run_task(self, flag: str, *args, **kwargs):
         """start a process running on the task"""
 
-        if self._mutex:
-            for k in self._tasks.keys():
+        if self.__mutex:
+            for k in self.__tasks.keys():
                 if self.is_task_running(k) and k != flag:
                     print(f"mutex lock")
                     return -2  # not run for mutex
 
-        if self._tasks[flag].running_count < self._max_t:
+        if self.__tasks[flag].running_count < self.__max_t:
             if args or kwargs:
-                self._tasks[flag].run(*args, **kwargs)
+                self.__tasks[flag].run(*args, **kwargs)
             else:
-                self._tasks[flag].run(by_saved_args=True)
+                self.__tasks[flag].run(by_saved_args=True)
 
         else:
             print(f"tick lock")
@@ -38,13 +38,13 @@ class TaskManager:
     def cancel_task(self, flag: int):
         """cancel all processes running on the task"""
         if self.is_task_running(flag):
-            self._tasks[flag].cancel()
+            self.__tasks[flag].cancel()
 
     def set_args(self, flag, *args, **kwargs):
-        self._tasks[flag].set_args(*args, **kwargs)
+        self.__tasks[flag].set_args(*args, **kwargs)
 
     def is_task_running(self, flag: int) -> bool:
-        if self._tasks[flag].running_count != 0:
+        if self.__tasks[flag].running_count != 0:
             return True
         else:
             return False

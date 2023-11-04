@@ -1,19 +1,16 @@
 # the part connected with Minecraft
 import queue
 import socket
+import sys
 import threading
-import logging
 
 from . import client, tool
-
-log: logging.Logger | None = None
 
 
 class HostClient(client.Client):
 
-    def __init__(self, server_addr: tuple[str, int], local_port: int, is_crypt: bool = False):
-        super().__init__(server_addr)
-        self.__is_crypt = is_crypt  # TODO: crypt
+    def __init__(self, server_addr: tuple[str, int], local_port: int, is_crypt: bool, logger):
+        super().__init__(server_addr, is_crypt, logger)
 
         self.local_port = local_port
         self.__virtual_client: socket.socket
@@ -23,9 +20,10 @@ class HostClient(client.Client):
         self.__virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.__virtual_client.connect((socket.gethostname(), self.local_port))
-            log.info("local server connected")
-        except ConnectionError as error:
-            log.error(f"failed to connect with local server: {error}")
+            self.log.info("local server connected")
+
+        except ConnectionRefusedError:
+            self.log.error(f"failed to connect with local server: connection refused")
             raise
 
     def __send_local_data(self):
@@ -55,10 +53,10 @@ class HostClient(client.Client):
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
-                    log.debug(msg)
+                    self.log.debug(msg)
 
         except ConnectionError as error:
-            log.error(f"{error}")
+            self.log.error(f"{error}")
             # self._send_func_alive = False
 
     def __get_local_data(self):
@@ -87,19 +85,22 @@ class HostClient(client.Client):
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
-                    log.debug(msg)
+                    self.log.debug(msg)
 
         except ConnectionError as error:
-            log.error(f"{error}")
+            self.log.error(f"{error}")
             # self._get_func_alive = False
 
     def local_client_main(self):
         functions = [self.__send_local_data, self.__get_local_data]
 
         while True:
-            self.__connect_local()
+            try:
+                self.__connect_local()
+            except ConnectionRefusedError:
+                sys.exit(-1)
 
-            threads = [threading.Thread(target=func) for func in functions]
+            threads = [threading.Thread(target=func, daemon=True) for func in functions]
 
             for thd in threads:
                 thd.start()
@@ -107,5 +108,5 @@ class HostClient(client.Client):
             for thd in threads:
                 thd.join()
 
-            log.info("connection interrupted")
-            log.info("reconnecting")
+            self.log.info("connection interrupted")
+            self.log.info("reconnecting")

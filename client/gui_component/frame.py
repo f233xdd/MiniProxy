@@ -13,11 +13,10 @@ GUEST = "guest"
 class ClientFrame(ttk.Frame):
 
     def __init__(self, task_manager, func: typing.Callable, flag: str, conf,
-                 str_var: tk.StringVar, msg_pipe, borderwidth: int):
+                 msg_pipe, borderwidth: int):
         super().__init__(borderwidth=borderwidth)
         self._task_manager = task_manager
         self._msg_pipe = msg_pipe
-        self._txt_var = str_var
 
         self._bar = {
             tk.X: tk.Scrollbar(self, orient=tk.HORIZONTAL),
@@ -41,14 +40,22 @@ class ClientFrame(ttk.Frame):
         self._bar[tk.X].config(command=self._text.xview)
         self._bar[tk.Y].config(command=self._text.yview)
 
+        def start():
+            self._task_manager.run_task(flag)
+            self._text.write(f"run task[{flag}]")
+
+        def cancel():
+            self._task_manager.cancel_task(flag)
+            self._text.write(f"cancel all the tasks[{flag}]")
+
         self._start_button = tk.Button(self, text="Start",
-                                       command=lambda: self._task_manager.run_task(flag))
+                                       command=start)
         self._cancel_button = tk.Button(self, text="Cancel",
-                                        command=lambda: self._task_manager.cancel_task(flag))
+                                        command=cancel)
 
         self.__pack_up()
 
-        thd = threading.Thread(target=self.__get_msg, daemon=True)
+        thd = threading.Thread(target=self.__get_msg)
         thd.start()
 
     def __pack_up(self):
@@ -157,8 +164,6 @@ class OptionFrame(ttk.Frame):
 
             self._task_manager.set_args(HOST, *self.conf.get_func_args(HOST), self._pipe[HOST])
             self._task_manager.set_args(GUEST, *self.conf.get_func_args(GUEST), self._pipe[GUEST])
-            # client._init_host_execute()
-            # client._init_guest_execute()
 
             messagebox.showinfo(title="Info", message="Applied.")
         except ValueError as e:

@@ -2,18 +2,14 @@
 import queue
 import socket
 import threading
-import logging
 
 from . import client, tool
-
-log: logging.Logger | None = None
 
 
 class GuestClient(client.Client):
 
-    def __init__(self, server_addr: tuple[str, int], virtual_server_port: int, is_crypt: bool = False):
-        super().__init__(server_addr)
-        self.__is_crypt = is_crypt  # TODO: crypt
+    def __init__(self, server_addr: tuple[str, int], virtual_server_port: int, is_crypt: bool, log):
+        super().__init__(server_addr, is_crypt, log)
 
         self._port = virtual_server_port
         self._virtual_server: socket.socket
@@ -28,7 +24,7 @@ class GuestClient(client.Client):
 
         ip = socket.gethostbyname(socket.gethostname())
         addr = (ip, self._port)
-        log.info(f"{ip}:{self._port}\n")
+        self.log.info(f"{ip}:{self._port}\n")
 
         self._virtual_server.bind(addr)
         self._virtual_server.listen(1)
@@ -36,7 +32,7 @@ class GuestClient(client.Client):
     def __connect_local(self):
         """connect with local as a server"""
         self._local_client, __ = self._virtual_server.accept()
-        log.info("local guest connected")
+        self.log.info("local guest connected")
 
     def __send_local_data(self):
         """send data to local"""
@@ -66,10 +62,10 @@ class GuestClient(client.Client):
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
-                    log.debug(msg)
+                    self.log.debug(msg)
 
         except ConnectionError as error:
-            log.error(f"{error}")
+            self.log.error(f"{error}")
             # self._send_func_alive = False
 
     def __get_local_data(self):
@@ -97,10 +93,10 @@ class GuestClient(client.Client):
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
-                    log.debug(msg)
+                    self.log.debug(msg)
 
         except ConnectionError as error:
-            log.error(f"{error}")
+            self.log.error(f"{error}")
             # self._get_func_alive = False
 
     def local_server_main(self):
@@ -117,5 +113,5 @@ class GuestClient(client.Client):
             for thd in threads:
                 thd.join()
 
-            log.info("connection interrupted")
-            log.info("reconnecting")
+            self.log.info("connection interrupted")
+            self.log.info("reconnecting")

@@ -1,6 +1,7 @@
 import json
 import os
 import copy
+import sys
 
 from .client import Client
 from .host_client import HostClient
@@ -102,7 +103,7 @@ def _init_host_execute():
     open_port = conf[HOST, "open_port"]
 
 
-def _init_host_log(stream):
+def _init_host_log(stream=sys.stdout):
     """set up host basic config"""
 
     client.log_length = conf[HOST, "debug", "console", "length"]
@@ -117,13 +118,9 @@ def _init_host_log(stream):
             pass
 
     if conf[HOST, "debug", "file_log"]:
-        logger = get_logger(HOST, local_path + "/log/host.log", stream=stream)
-        client.log = logger
-        host_client.log = logger
+        return get_logger(HOST, local_path + "/log/host.log", stream=stream)
     else:
-        logger = get_logger(HOST, stream=stream)
-        client.log = logger
-        host_client.log = logger
+        return get_logger(HOST, stream=stream)
 
     # client.recv_data_log = open(local_path + "/log/host.recv_data", 'wb')
     # client.send_data_log = open(local_path + "/log/host.send_data", 'wb')
@@ -140,7 +137,7 @@ def _init_guest_execute():
     virtual_port = conf[GUEST, "virtual_open_port"]
 
 
-def _init_guest_log(stream):
+def _init_guest_log(stream=sys.stdout):
     """set up guest basic config"""
 
     client.log_length = conf[GUEST, "debug", "console", "length"]
@@ -155,13 +152,9 @@ def _init_guest_log(stream):
             pass
 
     if conf[GUEST, "debug", "file_log"]:
-        logger = get_logger(GUEST, local_path + "/log/guest.log", stream=stream)
-        client.log = logger
-        guest_client.log = logger
+        return get_logger(GUEST, local_path + "/log/guest.log", stream=stream)
     else:
-        logger = get_logger(GUEST, stream=stream)
-        client.log = logger
-        guest_client.log = logger
+        return get_logger(GUEST, stream=stream)
 
     # client.recv_data_log = open(local_path + "/log/guest.recv_data", 'wb')
     # client.send_data_log = open(local_path + "/log/guest.send_data", 'wb')
