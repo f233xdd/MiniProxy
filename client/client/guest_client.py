@@ -36,27 +36,13 @@ class GuestClient(client.Client):
 
     def __send_local_data(self):
         """send data to local"""
-        # self._send_func_alive = True
-
         try:
             while True:
                 try:
                     data = self._queue_to_local.get(timeout=2)
-                    # log.debug(f"Get data from queue [{len(data)}]")
 
                 except queue.Empty:
                     continue
-                #     if self._get_func_alive is False:
-                #         self._send_func_alive = False
-                #         log.warning("interrupt for get func(timeout)")
-                #         break
-                #     else:
-                #         continue
-                #
-                # if self._get_func_alive is False:
-                #     self._send_func_alive = False
-                #     log.warning("interrupt for get func")
-                #     break
 
                 self._local_client.sendall(data)
 
@@ -66,28 +52,12 @@ class GuestClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
-            # self._send_func_alive = False
 
     def __get_local_data(self):
         """get data from local"""
-        # self._get_func_alive = True
         try:
             while True:
-                try:
-                    data = self._local_client.recv(client.MAX_LENGTH)
-                except TimeoutError:
-                    continue
-                #     if self._send_func_alive is False:
-                #         self._get_func_alive = False
-                #         log.warning("interrupt for send func(timeout)")
-                #         break
-                #     else:
-                #         continue
-                #
-                # if self._send_func_alive is False:
-                #     self._get_func_alive = False
-                #     log.warning("interrupt for send func")
-                #     break
+                data = self._local_client.recv(client.MAX_LENGTH)
 
                 self._queue_to_server.put(data)
 
@@ -97,7 +67,6 @@ class GuestClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
-            # self._get_func_alive = False
 
     def local_server_main(self):
         functions = [self.__send_local_data, self.__get_local_data]

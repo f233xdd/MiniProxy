@@ -36,11 +36,9 @@ class Client(object):
         self.__rsa: tool.RSA | None
 
         if self.__is_crypt:
-            self.__rsa = tool.RSA()  # TODO: get public key and encrypt data
+            self.__rsa = tool.RSA()  # TODO: RSA cannot work properly
         else:
             self.__rsa = None
-
-        print(self.__rsa)
 
         self.__create_socket()
 
@@ -90,9 +88,6 @@ class Client(object):
                 self._queue_to_local.put(sorted_data)
                 self.log.debug(f"analyse data [{len(sorted_data)}]")
 
-                # recv_data_log.write(sorted_data)
-                # recv_data_log.write(b'\n')
-
     def send_server_data(self):
         """send data to server"""
         if self.__rsa:
@@ -113,6 +108,3 @@ class Client(object):
                     msg = tool.message(sorted_data, log_content, log_length)
                     if msg:
                         self.log.debug(msg)
-
-                    # send_data_log.write(sorted_data)
-                    # send_data_log.write(b'\n')

@@ -72,9 +72,7 @@ class Server(object):
                     self.log.debug(msg, extra=self._extra)
 
                 if data:
-                    # log.debug("Before put", extra=self._ip)
                     self.data_queue.put(data, self._port, exchange=True)
-                    # log.debug("After put", extra=self._ip)
 
         except ConnectionError as e:
             if e is ConnectionResetError:
@@ -94,11 +92,8 @@ class Server(object):
         try:
             while True:
                 try:
-                    # log.debug("Before get", extra=self._ip)
                     data = self.data_queue.get(self._port, timeout=2)
-                    # log.debug("After get", extra=self._ip)
                 except queue.Empty:
-                    # log.debug("Get timeout", extra=self._ip)
                     if self._get_data_alive is False:
                         self.log.warning("[TimeoutError] func is down", extra=self._extra)
                         break

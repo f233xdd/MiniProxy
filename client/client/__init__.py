@@ -121,9 +121,6 @@ def get_log(owner: typing.Literal["host", "guest"], stream=sys.stdout) -> loggin
         except FileNotFoundError:
             pass
 
-    # client.recv_data_log = open(local_path + f"/log/{owner}.recv_data", 'wb')
-    # client.send_data_log = open(local_path + f"/log/{owner}.send_data", 'wb')
-
     if conf[owner, "debug", "file_log"]:
         return get_logger(owner, local_path + f"/log/{owner}.log", stream=stream)
     else:

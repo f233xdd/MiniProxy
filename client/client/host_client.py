@@ -28,8 +28,6 @@ class HostClient(client.Client):
 
     def __send_local_data(self):
         """send data to local"""
-        # self._send_func_alive = True
-
         try:
             while True:
                 try:
@@ -37,17 +35,6 @@ class HostClient(client.Client):
 
                 except queue.Empty:
                     continue
-                    # if self._get_func_alive is False:
-                    #     self._send_func_alive = False
-                    #     log.warning("interrupt for get func(timeout)")
-                    #     break
-                    # else:
-                    #     continue
-
-                # if self._get_func_alive is False:
-                #     self._send_func_alive = False
-                #     log.warning("interrupt for get func")
-                #     break
 
                 self.__virtual_client.sendall(data)
 
@@ -61,25 +48,9 @@ class HostClient(client.Client):
 
     def __get_local_data(self):
         """get data from local"""
-        # self._get_func_alive = True
-
         try:
             while True:
-                try:
-                    data = self.__virtual_client.recv(client.MAX_LENGTH)
-                except TimeoutError:
-                    continue
-                    # if self._send_func_alive is False:
-                    #     self._get_func_alive = False
-                    #     log.warning("interrupt for send func(timeout)")
-                    #     break
-                    # else:
-                    #     continue
-
-                # if self._send_func_alive is False:
-                #     self._get_func_alive = False
-                #     log.warning("interrupt for send func")
-                #     break
+                data = self.__virtual_client.recv(client.MAX_LENGTH)
 
                 self._queue_to_server.put(data)
 
@@ -89,7 +60,6 @@ class HostClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
-            # self._get_func_alive = False
 
     def local_client_main(self):
         functions = [self.__send_local_data, self.__get_local_data]
