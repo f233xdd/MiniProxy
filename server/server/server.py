@@ -9,7 +9,6 @@ from .tool import DoubleQueue, message
 # log config
 log_length: bool | None = None
 log_content: bool | None = None
-log: logging.Logger | None = None
 
 # main content
 MAX_LENGTH: int | None = None
@@ -22,7 +21,8 @@ class ClientOffLineError(Exception):
 class Server(object):
     data_queue = DoubleQueue()
 
-    def __init__(self, ip: str, port: int):
+    def __init__(self, ip: str, port: int, logger):
+        self.log: logging.Logger = logger
 
         self._extra = {'port': f"{port}"}
         self._port = port  # work as a port and a queue flag
@@ -46,22 +46,22 @@ class Server(object):
             client, addr = self._server_port.accept()
             addr = f"{addr[0]}:{addr[1]}"
 
-            log.info(f"Accept client. Address: {addr}", extra=self._extra)
+            self.log.info(f"Accept client. Address: {addr}", extra=self._extra)
             try:
                 client.send(f"Welcome to the server!\nYour address: {addr}\n".encode('utf_8'))
                 break
 
             except ConnectionResetError:
-                log.warning("[ConnectionResetError] Connection break.", extra=self._extra)
+                self.log.warning("[ConnectionResetError] Connection break.", extra=self._extra)
 
         self._client = client
         self.client_addr = addr
-        log.debug("Gets client", extra=self._extra)
+        self.log.debug("Gets client", extra=self._extra)
 
     def __get_data(self):
         """get data from the client and post it into the double queue"""
         self._get_data_alive = True
-        log.info("Get function start.", extra=self._extra)
+        self.log.info("Get function start.", extra=self._extra)
 
         try:
             while True:
@@ -69,7 +69,7 @@ class Server(object):
 
                 msg = message(data, log_content, log_length)
                 if msg:
-                    log.debug(msg, extra=self._extra)
+                    self.log.debug(msg, extra=self._extra)
 
                 if data:
                     # log.debug("Before put", extra=self._ip)
@@ -84,12 +84,12 @@ class Server(object):
             else:
                 e = "[ConnectionRefusedError]"
 
-            log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
+            self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
             self._get_data_alive = False
 
     def __send_data(self):
         """get data from the double queue and send it to the client"""
-        log.info("Send function start.", extra=self._extra)
+        self.log.info("Send function start.", extra=self._extra)
 
         try:
             while True:
@@ -100,7 +100,7 @@ class Server(object):
                 except queue.Empty:
                     # log.debug("Get timeout", extra=self._ip)
                     if self._get_data_alive is False:
-                        log.warning("[TimeoutError] func is down", extra=self._extra)
+                        self.log.warning("[TimeoutError] func is down", extra=self._extra)
                         break
                     else:
                         continue
@@ -109,10 +109,10 @@ class Server(object):
 
                 msg = message(data, log_content, log_length)
                 if msg:
-                    log.debug(msg, extra=self._extra)
+                    self.log.debug(msg, extra=self._extra)
 
         except BrokenPipeError:
-            log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self._extra)
+            self.log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self._extra)
 
         except ConnectionError as e:
             if e is ConnectionResetError:
@@ -122,7 +122,7 @@ class Server(object):
             else:
                 e = "[ConnectionRefusedError]"
 
-            log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
+            self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
 
     def start(self, deque=None):
         if deque:
@@ -132,7 +132,7 @@ class Server(object):
             self.__link_to_client()
 
             threads = [threading.Thread(target=func) for func in [self.__get_data, self.__send_data]]
-            log.info("Threads start", extra=self._extra)
+            self.log.info("Threads start", extra=self._extra)
 
             for thd in threads:
                 thd.start()
@@ -140,4 +140,4 @@ class Server(object):
             for thd in threads:
                 thd.join()
 
-            log.info("Threads are down", extra=self._extra)
+            self.log.info("Threads are down", extra=self._extra)

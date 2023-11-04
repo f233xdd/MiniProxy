@@ -12,7 +12,7 @@
     "clear_log": true,
     "console": {
       "length": true,
-      "content": false
+      "content": true
     }
   }
 }

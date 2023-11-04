@@ -5,7 +5,6 @@ import logging
 import sys
 from io import BufferedWriter
 
-import client
 from . import tool
 
 MAX_LENGTH: int | None = None
@@ -25,7 +24,7 @@ class Client(object):
 
         self.server_addr = server_addr
         self.encoding = 'utf_8'
-        self.__is_crypt = is_crypt  # TODO: crypt
+        self.__is_crypt = is_crypt
 
         self.__server: socket.socket
 
@@ -37,10 +36,11 @@ class Client(object):
         self.__rsa: tool.RSA | None
 
         if self.__is_crypt:
-            if client.conf["crypt"]:
-                self.__rsa = tool.RSA()  # TODO: get public key and encrypt data
+            self.__rsa = tool.RSA()  # TODO: get public key and encrypt data
         else:
             self.__rsa = None
+
+        print(self.__rsa)
 
         self.__create_socket()
 
@@ -61,6 +61,7 @@ class Client(object):
 
     def __get_public_key(self):
         pem = self.__server.recv(451)
+        print(pem)
         self.__rsa.load_key(pem)
         self.log.debug("load public key")
 
@@ -72,7 +73,7 @@ class Client(object):
     def get_server_data(self):
         """get data from server"""
         if self.__rsa:
-            self.__get_public_key()
+            self.__send_public_key()
 
         while True:
             data = self.__server.recv(MAX_LENGTH)
@@ -88,7 +89,7 @@ class Client(object):
                     sorted_data = self.__rsa.decrypt(sorted_data)
 
                 self._queue_to_local.put(sorted_data)
-                self.log.debug(f"analyse data [{len(sorted_data)}]")
+                self.log.debug(f"analyse data [{len(sorted_data)}]: {sorted_data}")
 
                 # recv_data_log.write(sorted_data)
                 # recv_data_log.write(b'\n')
@@ -96,7 +97,7 @@ class Client(object):
     def send_server_data(self):
         """send data to server"""
         if self.__rsa:
-            self.__send_public_key()
+            self.__get_public_key()
 
         while True:
             data = self._queue_to_server.get()

@@ -54,60 +54,60 @@ class Task:
 
     def __init__(self, func: typing.Callable, args: tuple = (), kwargs: dict | None = None):
 
-        self._func = func
-        self._args = args
+        self.__func = func
+        self.__args = args
         if kwargs is None:
-            self._kwargs = {}
+            self.__kwargs = {}
         else:
-            self._kwargs = kwargs
+            self.__kwargs = kwargs
 
-        self._run_count: int = 0
-        self._process: list[multiprocessing.Process] = []
+        self.__run_count: int = 0
+        self.__process: list[multiprocessing.Process] = []
 
     def run(self, by_saved_args: bool = False, *args, **kwargs):
         if by_saved_args:
-            pcs = multiprocessing.Process(target=self._func, args=self._args, kwargs=self._kwargs)
+            pcs = multiprocessing.Process(target=self.__func, args=self.__args, kwargs=self.__kwargs)
         else:
-            pcs = multiprocessing.Process(target=self._func, args=args, kwargs=kwargs)
+            pcs = multiprocessing.Process(target=self.__func, args=args, kwargs=kwargs)
 
         pcs.start()
 
-        self._process.append(pcs)
+        self.__process.append(pcs)
         self.__add_count()
 
     def cancel(self):
         """terminate all processes running"""
-        for pcs in self._process:
+        for pcs in self.__process:
             pcs.terminate()
 
     def set_args(self, *args, **kwargs):
         """set default args"""
         if args:
-            self._args = args
+            self.__args = args
 
         if kwargs:
-            self._kwargs = kwargs
+            self.__kwargs = kwargs
 
     def __check_process_alive(self):
         """clean over processes and update process ticker"""
         i = 0
-        while i < len(self._process):
-            if not self._process[i].is_alive():
-                del self._process[i]
+        while i < len(self.__process):
+            if not self.__process[i].is_alive():
+                del self.__process[i]
                 self.__reduce_count()
                 i += -1
             i += 1
 
     def __add_count(self):
-        self._run_count += 1
+        self.__run_count += 1
 
     def __reduce_count(self):
-        self._run_count += -1
+        self.__run_count += -1
 
     def __repr__(self):
-        return f"{self._run_count} | {self._process}"
+        return f"{self.__run_count} | {self.__process}"
 
     @property
     def running_count(self) -> int:
         self.__check_process_alive()
-        return self._run_count
+        return self.__run_count

@@ -4,7 +4,7 @@ import os
 from .server import Server
 from .tool import get_logger
 
-__all__ = ["Server", "local_ip", "local_ports"]
+__all__ = ["Server", "local_ip", "local_ports", "log"]
 
 local_path = os.getcwd() + "/server"
 
@@ -27,9 +27,9 @@ else:
             pass
 
 if config["debug"]["file_log"]:
-    server.log = get_logger("Server", local_path + "/log/server.log")
+    log = get_logger("Server", local_path + "/log/server.log")
 else:
-    server.log = get_logger("Sever")
+    log = get_logger("Sever")
 
 server.log_length = config["debug"]["console"]["length"]
 server.log_content = config["debug"]["console"]["content"]

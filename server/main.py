@@ -7,8 +7,8 @@ from server import *
 
 def start_server():
     print("Initialize ServerPort.", end='... ')
-    server_1 = Server(local_ip, local_ports[0])
-    server_2 = Server(local_ip, local_ports[1])
+    server_1 = Server(local_ip, local_ports[0], log)
+    server_2 = Server(local_ip, local_ports[1], log)
     print("Done!")
 
     print("Create threads.", end='... ')

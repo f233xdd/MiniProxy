@@ -1,4 +1,3 @@
-import queue
 import multiprocessing
 import typing
 
@@ -90,39 +89,3 @@ class DoubleQueue(object):
 
         else:
             raise ValueError("flag number is not correct.")
-
-
-#  ready to test
-class UmbrellaQueue(object):
-    """It provide a exchange queue, suit for 3 or more."""
-
-    def __init__(self):
-        self._mapping: dict[int | str: queue.Queue] = {}
-        self._root_queue = queue.Queue()
-        self._root = None
-
-    def add_queue(self, index, mode=None):
-        if mode == "root":
-            self._root = index
-        else:
-            self._mapping[index] = queue.Queue()
-
-    def put(self, data, index, block=True, timeout=None):  # TODO: consider a generator?
-        if index == self._root:
-            for i in self._mapping.keys():
-                self._mapping[i].put(data, block=block, timeout=timeout)
-        else:
-            self._root_queue.put(data, block=block, timeout=timeout)
-
-    def get(self, index):  # TODO: consider a generator?
-        if index == self._root:
-            data = []
-            for i in self._mapping.keys():
-                try:
-                    data.append(self._mapping[i].get(block=False))
-                except queue.Empty:
-                    pass
-            if data:
-                return data
-        else:
-            return self._root_queue.get(block=True)

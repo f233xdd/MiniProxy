@@ -15,38 +15,38 @@ class ClientFrame(ttk.Frame):
     def __init__(self, task_manager, func: typing.Callable, flag: str, conf,
                  msg_pipe, borderwidth: int):
         super().__init__(borderwidth=borderwidth)
-        self._task_manager = task_manager
-        self._msg_pipe = msg_pipe
+        self.__task_manager = task_manager
+        self.__msg_pipe = msg_pipe
 
-        self._bar = {
+        self.__bar = {
             tk.X: tk.Scrollbar(self, orient=tk.HORIZONTAL),
             tk.Y: tk.Scrollbar(self),
         }
 
-        self._text = Message(self, xscrollcommand=self._bar[tk.X].set,
-                             yscrollcommand=self._bar[tk.Y].set, height=16, width=80, warp="none")
+        self.__text = Message(self, xscrollcommand=self.__bar[tk.X].set,
+                              yscrollcommand=self.__bar[tk.Y].set, height=16, width=80, warp="none")
 
         if flag == HOST:
-            args = *conf.get_func_args(HOST), self._msg_pipe
+            args = *conf.get_func_args(HOST), self.__msg_pipe
 
         elif flag == GUEST:
-            args = *conf.get_func_args(GUEST), self._msg_pipe
+            args = *conf.get_func_args(GUEST), self.__msg_pipe
 
         else:
             raise ValueError
 
-        self._task_manager.add_task(func, flag, args)
+        self.__task_manager.add_task(func, flag, args)
 
-        self._bar[tk.X].config(command=self._text.xview)
-        self._bar[tk.Y].config(command=self._text.yview)
+        self.__bar[tk.X].config(command=self.__text.xview)
+        self.__bar[tk.Y].config(command=self.__text.yview)
 
         def start():
-            self._task_manager.run_task(flag)
-            self._text.write(f"run task[{flag}]")
+            self.__task_manager.run_task(flag)
+            self.__text.write(f"run task[{flag}]")
 
         def cancel():
-            self._task_manager.cancel_task(flag)
-            self._text.write(f"cancel all the tasks[{flag}]")
+            self.__task_manager.cancel_task(flag)
+            self.__text.write(f"cancel all the tasks[{flag}]")
 
         self._start_button = tk.Button(self, text="Start",
                                        command=start)
@@ -59,10 +59,10 @@ class ClientFrame(ttk.Frame):
         thd.start()
 
     def __pack_up(self):
-        self._bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
-        self._bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
+        self.__bar[tk.X].pack(side=tk.BOTTOM, fill=tk.X)
+        self.__bar[tk.Y].pack(side=tk.RIGHT, fill=tk.Y)
 
-        self._text.pack(side=tk.TOP, fill=tk.BOTH)
+        self.__text.pack(side=tk.TOP, fill=tk.BOTH)
 
         self._start_button.pack(side=tk.LEFT, padx=60, pady=10)
         self._cancel_button.pack(side=tk.RIGHT, padx=60, pady=10)
@@ -70,10 +70,10 @@ class ClientFrame(ttk.Frame):
     def __get_msg(self):
         total = ''
         while True:
-            msg = self._msg_pipe.read()
+            msg = self.__msg_pipe.read()
             total = ''.join([total, msg, ' '])
 
-            self._text.write(msg)
+            self.__text.write(msg)
 
 
 class OptionFrame(ttk.Frame):
@@ -81,7 +81,8 @@ class OptionFrame(ttk.Frame):
     def __init__(self, task_manager, conf, crypto_available, msg_pipe, borderwidth):
         super().__init__(borderwidth=borderwidth)
 
-        self._task_manager = task_manager
+        self.__task_manager = task_manager
+        self.__var_int = tk.IntVar()
         self.conf = conf
 
         self._h_option = {
@@ -120,7 +121,12 @@ class OptionFrame(ttk.Frame):
         if not crypto_available:
             self._check_button = tk.Checkbutton(self, text="Crypto", state="disabled")
         else:
-            self._check_button = tk.Checkbutton(self, text="Crypto")
+            self._check_button = tk.Checkbutton(self, text="Crypto", variable=self.__var_int, onvalue=1, offvalue=0)
+
+        if self.conf["crypt"]:
+            self._check_button.select()
+        else:
+            self._check_button.deselect()
 
         self._check_button.grid(row=10, column=0)
         self._pipe = msg_pipe
@@ -162,8 +168,8 @@ class OptionFrame(ttk.Frame):
         try:
             self.__update_conf()
 
-            self._task_manager.set_args(HOST, *self.conf.get_func_args(HOST), self._pipe[HOST])
-            self._task_manager.set_args(GUEST, *self.conf.get_func_args(GUEST), self._pipe[GUEST])
+            self.__task_manager.set_args(HOST, *self.conf.get_func_args(HOST), self._pipe[HOST])
+            self.__task_manager.set_args(GUEST, *self.conf.get_func_args(GUEST), self._pipe[GUEST])
 
             messagebox.showinfo(title="Info", message="Applied.")
         except ValueError as e:
@@ -202,3 +208,8 @@ class OptionFrame(ttk.Frame):
         value = self._v_option["server_port"]["entry"].get()
         if verify_port(value):
             self.conf.update(int(value), [GUEST, "server_address", "port"])
+
+        if self.__var_int.get() == 1:
+            self.conf.update(True, ["crypt"])
+        else:
+            self.conf.update(False, ["crypt"])

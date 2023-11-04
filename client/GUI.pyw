@@ -19,25 +19,25 @@ class MainWindow(tk.Tk):
         self.title(title)
         self.geometry(size)
 
-        self._task_manager = TaskManager(times=1, mutex=False)
-        self._notebook = ttk.Notebook(self, width=20, height=20)
-        self._msg_pipe = {
+        self.__task_manager = TaskManager(times=1, mutex=False)
+        self.__notebook = ttk.Notebook(self, width=20, height=20)
+        self.__msg_pipe = {
             HOST: MessagePipe(),
             GUEST: MessagePipe(),
         }
 
-        self._frame = {
-            HOST: ClientFrame(self._task_manager, h_start, HOST, conf,
-                              self._msg_pipe[HOST], borderwidth=0),
-            GUEST: ClientFrame(self._task_manager, v_start, GUEST, conf,
-                               self._msg_pipe[GUEST], borderwidth=0),
-            OPTION: OptionFrame(self._task_manager, conf, crypt_available, self._msg_pipe, borderwidth=1),
+        self.__frame = {
+            HOST: ClientFrame(self.__task_manager, h_start, HOST, conf,
+                              self.__msg_pipe[HOST], borderwidth=0),
+            GUEST: ClientFrame(self.__task_manager, v_start, GUEST, conf,
+                               self.__msg_pipe[GUEST], borderwidth=0),
+            OPTION: OptionFrame(self.__task_manager, conf, crypt_available, self.__msg_pipe, borderwidth=1),
         }
 
-        self._notebook.add(self._frame[HOST], text=HOST)
-        self._notebook.add(self._frame[GUEST], text=GUEST)
-        self._notebook.add(self._frame[OPTION], text=OPTION)
-        self._notebook.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
+        self.__notebook.add(self.__frame[HOST], text=HOST)
+        self.__notebook.add(self.__frame[GUEST], text=GUEST)
+        self.__notebook.add(self.__frame[OPTION], text=OPTION)
+        self.__notebook.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
 
 if __name__ == "__main__":

@@ -5,29 +5,30 @@ import time
 import client
 
 
-def start(
-        server_addr: tuple[str, int] | None = None,
-        virtual_port: int | None = None,
-        public=None,
-        daemon=False):
-    client._init_guest_execute()
+def start(server_addr: tuple[str, int] | None = None,
+          virtual_port: int | None = None,
+          crypt: bool | None = None,
+          public=None,
+          daemon=False):
+    addr, port, is_crypt = client.get_attrs("guest")
 
     if server_addr:
         addr = server_addr
-    else:
-        addr = client.server_addr["guest"]
 
     if virtual_port:
         port = virtual_port
-    else:
-        port = client.virtual_port
+
+    if crypt:
+        is_crypt = crypt
+
+    print("is_crypt: ", is_crypt)
 
     if public:
-        log = client._init_guest_log(public)
+        log = client.get_log("guest", public)
     else:
-        log = client._init_guest_log()
+        log = client.get_log("guest")
 
-    guest = client.GuestClient(addr, port, False, log)
+    guest = client.GuestClient(addr, port, is_crypt, log)
 
     functions = [guest.send_server_data, guest.get_server_data, guest.local_server_main]
 

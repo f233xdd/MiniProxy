@@ -1,7 +1,9 @@
 import json
+import logging
 import os
 import copy
 import sys
+import typing
 
 from .client import Client
 from .host_client import HostClient
@@ -10,17 +12,11 @@ from .guest_client import GuestClient
 from .tool import get_logger, crypt_available
 
 __all__ = ["Client", "HostClient", "GuestClient",
-           "_init_host_execute", "_init_host_log",
-           "_init_guest_execute", "_init_guest_log",
-           "server_addr", "open_port", "virtual_port",
+           "get_attrs", "get_log",
            "conf", "crypt_available"]
 
 HOST = "host"
 GUEST = "guest"
-
-server_addr: dict[str: tuple[str, int], str: tuple[str, int]] = {"host": ('', 0), "guest": ('', 0)}
-open_port: int | None = None
-virtual_port: int | None = None
 
 local_path = os.getcwd() + "/client"
 
@@ -74,13 +70,13 @@ class Config:
 
 class ClientConfig(Config):
 
-    def get_func_args(self, func: str) -> tuple[tuple[str, int], int]:
+    def get_func_args(self, func: str) -> tuple[tuple[str, int], int, bool]:
         if func == HOST:
             return ((self[HOST, "server_address", "internet_ip"], self[HOST, "server_address", "port"]),
-                    self[HOST, "open_port"])
+                    self[HOST, "open_port"], self["crypt"])
         elif func == GUEST:
             return ((self[GUEST, "server_address", "internet_ip"], self[GUEST, "server_address", "port"]),
-                    self[GUEST, "virtual_open_port"])
+                    self[GUEST, "virtual_open_port"], self["crypt"])
 
     def __getitem__(self, keys):
         if keys == "crypt" and not crypt_available:
@@ -92,69 +88,43 @@ class ClientConfig(Config):
 conf = ClientConfig(local_path + "/config.json")
 
 
-def _init_host_execute():
-    global open_port
+def get_attrs(owner: typing.Literal["host", "guest"]) -> tuple[tuple[str, int], int, bool]:
+    client.MAX_LENGTH = conf[owner, "data_max_length"]
 
-    client.MAX_LENGTH = conf[HOST, "data_max_length"]
+    addr = conf[owner, "server_address"]
 
-    addr = conf[HOST, "server_address"]
-    server_addr[HOST] = (addr["internet_ip"], addr["port"])
+    server_addr = (addr["internet_ip"], addr["port"])
+    is_crypt = conf["crypt"]
 
-    open_port = conf[HOST, "open_port"]
+    if owner == HOST:
+        open_port = conf[owner, "open_port"]
+        return server_addr, open_port, is_crypt
+
+    elif owner == GUEST:
+        virtual_port = conf[owner, "virtual_open_port"]
+        return server_addr, virtual_port, is_crypt
+    else:
+        raise ValueError(owner)
 
 
-def _init_host_log(stream=sys.stdout):
+def get_log(owner: typing.Literal["host", "guest"], stream=sys.stdout) -> logging.Logger:
     """set up host basic config"""
 
-    client.log_length = conf[HOST, "debug", "console", "length"]
-    client.log_content = conf[HOST, "debug", "console", "content"]
+    client.log_length = conf[owner, "debug", "console", "length"]
+    client.log_content = conf[owner, "debug", "console", "content"]
 
-    if conf[HOST, "debug", "clear_log"]:
+    if conf[owner, "debug", "clear_log"]:
         try:
-            os.remove(local_path + "/log/host.log")
-            os.remove(local_path + "/log/host.send_data")
-            os.remove(local_path + "/log/host.recv_data")
+            os.remove(local_path + f"/log/{owner}.log")
+            os.remove(local_path + f"/log/{owner}.send_data")
+            os.remove(local_path + f"/log/{owner}.recv_data")
         except FileNotFoundError:
             pass
 
-    if conf[HOST, "debug", "file_log"]:
-        return get_logger(HOST, local_path + "/log/host.log", stream=stream)
+    # client.recv_data_log = open(local_path + f"/log/{owner}.recv_data", 'wb')
+    # client.send_data_log = open(local_path + f"/log/{owner}.send_data", 'wb')
+
+    if conf[owner, "debug", "file_log"]:
+        return get_logger(owner, local_path + f"/log/{owner}.log", stream=stream)
     else:
-        return get_logger(HOST, stream=stream)
-
-    # client.recv_data_log = open(local_path + "/log/host.recv_data", 'wb')
-    # client.send_data_log = open(local_path + "/log/host.send_data", 'wb')
-
-
-def _init_guest_execute():
-    global virtual_port
-
-    client.MAX_LENGTH = conf[GUEST, "data_max_length"]
-
-    addr = conf[GUEST, "server_address"]
-    server_addr[GUEST] = (addr["internet_ip"], addr["port"])
-
-    virtual_port = conf[GUEST, "virtual_open_port"]
-
-
-def _init_guest_log(stream=sys.stdout):
-    """set up guest basic config"""
-
-    client.log_length = conf[GUEST, "debug", "console", "length"]
-    client.log_content = conf[GUEST, "debug", "console", "content"]
-
-    if conf[GUEST, "debug", "clear_log"]:
-        try:
-            os.remove(local_path + "/log/guest.log")
-            os.remove(local_path + "/log/guest.send_data")
-            os.remove(local_path + "/log/guest.recv_data")
-        except FileNotFoundError:
-            pass
-
-    if conf[GUEST, "debug", "file_log"]:
-        return get_logger(GUEST, local_path + "/log/guest.log", stream=stream)
-    else:
-        return get_logger(GUEST, stream=stream)
-
-    # client.recv_data_log = open(local_path + "/log/guest.recv_data", 'wb')
-    # client.send_data_log = open(local_path + "/log/guest.send_data", 'wb')
+        return get_logger(owner, stream=stream)
