@@ -9,7 +9,7 @@ data: bytes = (
         b"\x00" * 32
 )
 # 131072
-MAX_LENGTH = 131072
+MAX_LENGTH = 256
 addr = (socket.gethostname(), 9999)
 _log = log.create_logger("MC_host", log_file="mc_host.log")
 

@@ -1,5 +1,5 @@
 {
-  "crypt": false,
+  "crypt": true,
   "guest": {
     "data_max_length": 999999,
     "debug": {

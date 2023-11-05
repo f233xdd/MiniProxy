@@ -12,21 +12,21 @@ def start(server_addr: tuple[str, int] | None = None,
           daemon=False):
     addr, port, is_crypt = client.get_attrs("guest")
 
-    if server_addr:
+    if server_addr is not None:
         addr = server_addr
 
-    if virtual_port:
+    if virtual_port is not None:
         port = virtual_port
 
-    if crypt:
+    if crypt is not None:
         is_crypt = crypt
-
-    print("is_crypt: ", is_crypt)
 
     if public:
         log = client.get_log("guest", public)
     else:
         log = client.get_log("guest")
+
+    log.info(f"is_crypt: {is_crypt}")
 
     guest = client.GuestClient(addr, port, is_crypt, log)
 

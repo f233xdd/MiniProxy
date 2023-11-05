@@ -1,3 +1,4 @@
+import copy
 import struct
 import typing
 
@@ -168,10 +169,15 @@ class TCPDataAnalyser:
             if sorted_data:
                 self.__packages.append(sorted_data)
 
-    @property
-    def packages(self) -> typing.Generator:
-        yield from self.__packages
-        self.__packages.clear()
+    def packages(self, single: bool = True) -> list[bytes] | bytes:
+        if not single:
+            res = copy.deepcopy(self.__packages)
+            self.__packages.clear()
+            return res
+        else:
+            res = self.__packages[0]
+            del self.__packages[0]
+            return res
 
     def __repr__(self):
         return str(self.__packages)

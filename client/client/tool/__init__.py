@@ -8,5 +8,17 @@ try:
 except ImportError:
     crypt_available = False
 
-__all__ = ["BinaryBuffer", "TCPDataAnalyser", "TCPDataPacker", "RSA",
+
+    class RSA:
+
+        def __init__(self):
+            raise RuntimeError("Not available")
+
+
+    class Cipher:
+
+        def __init__(self):
+            raise RuntimeError("Not available")
+
+__all__ = ["BinaryBuffer", "TCPDataAnalyser", "TCPDataPacker", "RSA", "Cipher",
            "get_logger", "message", "crypt_available"]

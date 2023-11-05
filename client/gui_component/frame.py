@@ -4,7 +4,7 @@ import threading
 import typing
 
 from .message import Message
-from .infer_tool import verify_ip, verify_port
+from .verify_tool import verify_ip, verify_port
 
 HOST = "host"
 GUEST = "guest"
@@ -69,14 +69,10 @@ class ClientFrame(ttk.Frame):
 
     def __get_msg(self):
         total = ''
-        try:
-            while True:
-                msg = self.__msg_pipe.read()
-                total = ''.join([total, msg, ' '])
-
-                self.__text.write(msg)
-        except BrokenPipeError:
-            pass
+        while True:
+            msg = self.__msg_pipe.read()
+            total = ''.join([total, msg, ' '])
+            self.__text.write(msg)
 
 
 class OptionFrame(ttk.Frame):

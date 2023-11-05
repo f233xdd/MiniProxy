@@ -3,6 +3,7 @@ import queue
 import socket
 import logging
 import sys
+import threading
 from io import BufferedWriter
 
 from . import tool
@@ -23,8 +24,8 @@ class Client(object):
         self.log: logging.Logger = logger
 
         self.server_addr = server_addr
-        self.encoding = 'utf_8'
-        self.__is_crypt = is_crypt
+        self.encoding: str = 'utf_8'
+        self.__is_crypt: bool = is_crypt
 
         self.__server: socket.socket
 
@@ -34,11 +35,16 @@ class Client(object):
         self.__tcp_data_analyser = tool.TCPDataAnalyser()
         self.__tcp_data_packer = tool.TCPDataPacker()
         self.__rsa: tool.RSA | None
+        self.__cipher: tool.Cipher | None
 
         if self.__is_crypt:
             self.__rsa = tool.RSA()  # TODO: RSA cannot work properly
+            self.__cipher = tool.Cipher()
+            self.__got_public_key = threading.Event()
+
         else:
             self.__rsa = None
+            self.__cipher = None
 
         self.__create_socket()
 
@@ -56,55 +62,77 @@ class Client(object):
             self.log.error(e)
             sys.exit(-1)
 
-    def __get_public_key(self):
-        pem = self.__server.recv(451)
+    def __get_key(self):
+        pem = self.__recv()
         print(pem)
         self.__rsa.load_key(pem)
-        self.log.debug("load public key")
+        self.log.info("load public key")
+        self.__got_public_key.set()
 
-    def __send_public_key(self):
+        d = self.__recv()
+        print(d)
+        key = self.__rsa.decrypt(d)
+        self.__cipher.load_key(key)
+        self.log.info("load cipher")
+
+    def __send_key(self):
         pem = self.__rsa.get_public_key()
-        self.__server.sendall(pem)
-        self.log.debug("send public key")
+        self.__send(pem)
+        self.log.info("send public key")
 
-    def get_server_data(self):
-        """get data from server"""
-        if self.__rsa:
-            self.__send_public_key()
+        self.__got_public_key.wait()
+        key = self.__rsa.encrypt(self.__cipher.encrypt_key)
+        self.__send(key)
+        self.log.info("send cipher")
 
-        while True:
-            data = self.__server.recv(MAX_LENGTH)
+    def __recv(self, single: bool = True) -> list[bytes] | bytes:
+        data = self.__server.recv(MAX_LENGTH)
+        res = []
 
-            msg = tool.message(data, log_content, log_length, add_msg="Total")
+        msg = tool.message(data, log_content, log_length, add_msg="Total")
+        if msg:
+            self.log.debug(msg)
+
+        self.__tcp_data_analyser.put(data)
+        if not single:
+            for sorted_data in self.__tcp_data_analyser.packages(False):
+                self.log.debug(f"analyse data [{len(sorted_data)}]")
+                res.append(sorted_data)
+            return res
+        else:
+            return self.__tcp_data_analyser.packages()
+
+    def __send(self, data: bytes):
+        self.__tcp_data_packer.put(data)
+        for sorted_data in self.__tcp_data_packer.packages:
+            self.log.debug(f"pack data [{len(sorted_data)}]")
+
+            self.__server.sendall(sorted_data)
+            msg = tool.message(data, log_content, log_length)
             if msg:
                 self.log.debug(msg)
 
-            self.__tcp_data_analyser.put(data)
+    def get_server_data(self):
+        """get data from server"""
+        if self.__is_crypt:
+            self.__send_key()
 
-            for sorted_data in self.__tcp_data_analyser.packages:
-                if self.__rsa:
-                    sorted_data = self.__rsa.decrypt(sorted_data)
+        while True:
+            for data in self.__recv(single=False):
+                if self.__cipher:
+                    data = self.__cipher.decrypt(data)
 
-                self._queue_to_local.put(sorted_data)
-                self.log.debug(f"analyse data [{len(sorted_data)}]")
+                self._queue_to_local.put(data)
 
     def send_server_data(self):
         """send data to server"""
-        if self.__rsa:
-            self.__get_public_key()
+        if self.__is_crypt:
+            self.__get_key()
 
         while True:
             data = self._queue_to_server.get()
             if data:
-                if self.__rsa:
-                    data = self.__rsa.encrypt(data)
+                if self.__cipher:
+                    data = self.__cipher.encrypt(data)
 
-                self.__tcp_data_packer.put(data)
-
-                for sorted_data in self.__tcp_data_packer.packages:
-                    self.__server.sendall(sorted_data)
-                    self.log.debug(f"pack data [{len(sorted_data)}]")
-
-                    msg = tool.message(sorted_data, log_content, log_length)
-                    if msg:
-                        self.log.debug(msg)
+                self.__send(data)
