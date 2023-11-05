@@ -1,4 +1,4 @@
-# NAT-T(on-line mc)
+# Mini Proxy
 
 This project is used to connect two clients
 
