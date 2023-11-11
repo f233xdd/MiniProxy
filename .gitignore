@@ -1,12 +1,8 @@
 .idea
 .vscode
 
-client/client/log/*
-test/*
+test/
 
 *.pyc
 *.pyi
 *.log
-
-test.py
-
