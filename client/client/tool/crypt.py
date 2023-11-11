@@ -83,10 +83,7 @@ if __name__ == "__main__":
     crypto = RSA()
     b = crypto.get_public_key()
     crypto.load_key(b)
-    # 958 8192
-    # 446 4096
-    # 190 2048
-    # 62 1024
+
     d = b"\x3b" * 62
     res_1 = crypto.encrypt(d)
     res_2 = crypto.decrypt(res_1)

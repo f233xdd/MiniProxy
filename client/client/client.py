@@ -4,6 +4,7 @@ import socket
 import logging
 import sys
 import threading
+import typing
 from io import BufferedWriter
 
 from . import tool
@@ -63,13 +64,13 @@ class Client(object):
             sys.exit(-1)
 
     def __get_key(self):
-        pem = self.__recv()
+        pem = next(self.__recv())
         print(pem)
         self.__rsa.load_key(pem)
         self.log.info("load public key")
         self.__got_public_key.set()
 
-        d = self.__recv()
+        d = next(self.__recv())
         print(d)
         key = self.__rsa.decrypt(d)
         self.__cipher.load_key(key)
@@ -85,29 +86,33 @@ class Client(object):
         self.__send(key)
         self.log.info("send cipher")
 
-    def __recv(self, single: bool = True) -> list[bytes] | bytes:
-        data = self.__server.recv(MAX_LENGTH)
-        res = []
+    def __recv(self) -> typing.Iterator[bytes]:
+        try:
+            data = self.__server.recv(MAX_LENGTH)
+        except ConnectionError as e:
+            self.log.error(e)
+            sys.exit(-1)
 
         msg = tool.message(data, log_content, log_length, add_msg="Total")
         if msg:
             self.log.debug(msg)
 
         self.__tcp_data_analyser.put(data)
-        if not single:
-            for sorted_data in self.__tcp_data_analyser.packages(False):
-                self.log.debug(f"analyse data [{len(sorted_data)}]")
-                res.append(sorted_data)
-            return res
-        else:
-            return self.__tcp_data_analyser.packages()
+        for sorted_data in self.__tcp_data_analyser.packages:
+            self.log.debug(f"analyse data [{len(sorted_data)}]")
+            yield sorted_data
 
     def __send(self, data: bytes):
         self.__tcp_data_packer.put(data)
         for sorted_data in self.__tcp_data_packer.packages:
             self.log.debug(f"pack data [{len(sorted_data)}]")
 
-            self.__server.sendall(sorted_data)
+            try:
+                self.__server.sendall(sorted_data)
+            except ConnectionError as e:
+                self.log.error(e)
+                sys.exit(-1)
+
             msg = tool.message(data, log_content, log_length)
             if msg:
                 self.log.debug(msg)
@@ -118,7 +123,7 @@ class Client(object):
             self.__send_key()
 
         while True:
-            for data in self.__recv(single=False):
+            for data in self.__recv():
                 if self.__cipher:
                     data = self.__cipher.decrypt(data)
 
