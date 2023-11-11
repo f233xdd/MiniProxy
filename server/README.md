@@ -1,6 +1,9 @@
 # Server
 
 * This is the server part.
+
+## Start
+
 * You can simply run **_main.py_** in order to get started.
 
 ## HOW-TO(config.json)
