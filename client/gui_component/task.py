@@ -39,6 +39,8 @@ class TaskManager:
         """cancel all processes running on the task"""
         if self.is_task_running(flag):
             self.__tasks[flag].cancel()
+        else:
+            return -1  # not process is alive
 
     def set_args(self, flag, *args, **kwargs):
         self.__tasks[flag].set_args(*args, **kwargs)

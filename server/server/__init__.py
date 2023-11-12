@@ -25,6 +25,13 @@ else:
             os.remove(local_path + "/log/server.log")
         except (FileNotFoundError, PermissionError):
             pass
+        except PermissionError:
+            # there might be other process using the log file
+            # usually caused for incompletely exiting python
+            print(
+                "PermissionError: failed to remove log file. "
+                "Check your explorer to find if there's another python process running and interrupt it"
+            )
 
 if config["debug"]["file_log"]:
     log = get_logger("Server", local_path + "/log/server.log")
