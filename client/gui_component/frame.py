@@ -49,9 +49,9 @@ class ClientFrame(ttk.Frame):
             self.__text.write(f"cancel all the tasks[{flag}]")
 
         self._start_button = tk.Button(self, text="Start",
-                                       command=start)
+                                       command=start, height=2, width=10)
         self._cancel_button = tk.Button(self, text="Cancel",
-                                        command=cancel)
+                                        command=cancel, height=2, width=10)
 
         self.__pack_up()
 

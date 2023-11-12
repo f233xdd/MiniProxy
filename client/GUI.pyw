@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import ctypes
 
 from client import conf, crypt_available
 from host_main import start as h_start
@@ -39,7 +40,11 @@ class MainWindow(tk.Tk):
         self.__notebook.add(self.__frame[OPTION], text=OPTION)
         self.__notebook.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
+        self.call('tk', 'scaling', scale_factor / 150)
+
 
 if __name__ == "__main__":
-    root = MainWindow("client", "600x400")
+    root = MainWindow("client", "750x500")
     root.mainloop()
