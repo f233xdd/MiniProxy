@@ -6,5 +6,4 @@ client/client/log/*
 *.pyi
 *.log
 
-test.py
-
+!/test/
