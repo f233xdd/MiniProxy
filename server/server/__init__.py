@@ -23,8 +23,6 @@ else:
     if config["debug"]["clear_log"]:
         try:
             os.remove(local_path + "/log/server.log")
-        except (FileNotFoundError, PermissionError):
-            pass
         except PermissionError:
             # there might be other process using the log file
             # usually caused for incompletely exiting python

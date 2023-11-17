@@ -12,8 +12,7 @@ from .guest_client import GuestClient
 from .tool import get_logger, crypt_available
 
 __all__ = ["Client", "HostClient", "GuestClient",
-           "get_attrs", "get_log",
-           "conf", "crypt_available"]
+           "get_attrs", "conf", "crypt_available"]
 
 HOST = "host"
 GUEST = "guest"
@@ -116,8 +115,6 @@ def get_log(owner: typing.Literal["host", "guest"], stream=sys.stdout) -> loggin
         if conf[owner, "debug", "clear_log"]:
             try:
                 os.remove(local_path + f"/log/{owner}.log")
-            except FileNotFoundError:
-                pass
             except PermissionError:
                 # there might be other process using the log file
                 # usually caused for incompletely exiting python
