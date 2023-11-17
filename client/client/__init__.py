@@ -20,9 +20,6 @@ GUEST = "guest"
 
 local_path = os.getcwd() + "/client"
 
-if not os.path.exists(local_path + "/log"):
-    os.mkdir(local_path + "/log")
-
 
 class Config:
 
@@ -113,13 +110,21 @@ def get_log(owner: typing.Literal["host", "guest"], stream=sys.stdout) -> loggin
     client.log_length = conf[owner, "debug", "console", "length"]
     client.log_content = conf[owner, "debug", "console", "content"]
 
-    if conf[owner, "debug", "clear_log"]:
-        try:
-            os.remove(local_path + f"/log/{owner}.log")
-            os.remove(local_path + f"/log/{owner}.send_data")
-            os.remove(local_path + f"/log/{owner}.recv_data")
-        except FileNotFoundError:
-            pass
+    if not os.path.exists(local_path + "/log"):
+        os.mkdir(local_path + "/log")
+    else:
+        if conf[owner, "debug", "clear_log"]:
+            try:
+                os.remove(local_path + f"/log/{owner}.log")
+            except FileNotFoundError:
+                pass
+            except PermissionError:
+                # there might be other process using the log file
+                # usually caused for incompletely exiting python
+                stream.write(
+                    "PermissionError: failed to remove log file. "
+                    "Check your explorer to find if there's another python process running and interrupt it"
+                )
 
     if conf[owner, "debug", "file_log"]:
         return get_logger(owner, local_path + f"/log/{owner}.log", stream=stream)

@@ -41,17 +41,27 @@ class ClientFrame(ttk.Frame):
         self.__bar[tk.Y].config(command=self.__text.yview)
 
         def start():
-            self.__task_manager.run_task(flag)
-            self.__text.write(f"run task[{flag}]")
+            res = self.__task_manager.run_task(flag)
+
+            if res == -1:
+                self.__text.write(f"failed to start for max tick")
+            elif res == -2:
+                self.__text.write(f"failed to start for mutex lock")
+            else:
+                self.__text.write(f"run task")
 
         def cancel():
-            self.__task_manager.cancel_task(flag)
-            self.__text.write(f"cancel all the tasks[{flag}]")
+            res = self.__task_manager.cancel_task(flag)
+
+            if res == -1:
+                self.__text.write(f"failed to cancel all the tasks because no one is running")
+            else:
+                self.__text.write(f"cancel all the tasks")
 
         self._start_button = tk.Button(self, text="Start",
-                                       command=start)
+                                       command=start, height=2, width=10)
         self._cancel_button = tk.Button(self, text="Cancel",
-                                        command=cancel)
+                                        command=cancel, height=2, width=10)
 
         self.__pack_up()
 
