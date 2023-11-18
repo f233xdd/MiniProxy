@@ -9,7 +9,7 @@ def start(server_addr: tuple[str, int] | None = None,
           open_port: int | None = None,
           crypt: bool | None = None,
           public=None,
-          daemon=False):
+          daemon=True):
     addr, port, is_crypt = client.get_attrs("host")
 
     if server_addr is not None:
@@ -31,9 +31,6 @@ def start(server_addr: tuple[str, int] | None = None,
     host = client.HostClient(addr, port, is_crypt, log)
 
     functions = [host.send_server_data, host.get_server_data, host.local_client_main]
-
-    if __name__ == "__main__":
-        daemon = True
 
     threads = [threading.Thread(target=func, daemon=daemon) for func in functions]
 

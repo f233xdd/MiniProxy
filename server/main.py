@@ -2,11 +2,14 @@
 import multiprocessing
 import time
 
-from server import *
+from server import Server, get_attrs, get_log
 
 
 def start_server():
     print("[INFO] Initialize ServerPort.", end='... ')
+    local_ip, local_ports = get_attrs()
+    log = get_log()
+
     server_1 = Server(local_ip, local_ports[0], log)
     server_2 = Server(local_ip, local_ports[1], log)
     print("Done!")
@@ -20,7 +23,7 @@ def start_server():
     process_2.start()
     print("[INFO] Server is running!\n")
 
-    return [process_1, process_2]
+    return process_1, process_2
 
 
 def main():
