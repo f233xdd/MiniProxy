@@ -44,7 +44,6 @@ class HostClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
-            # self._send_func_alive = False
 
     def __get_local_data(self):
         """get data from local"""

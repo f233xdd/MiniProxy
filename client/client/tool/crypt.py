@@ -48,17 +48,18 @@ class Cipher:
     def __init__(self):
         self.__keys = [Fernet.generate_key(), b""]
         self.__encrypter = Fernet(self.__keys[0])
-        self.__decipher = None
+        self.__decrypter = None
 
     def load_key(self, key: bytes):
-        self.__decipher = Fernet(key)
+        """load key used to decrypt"""
+        self.__decrypter = Fernet(key)
         self.__keys[1] = key
 
     def encrypt(self, data: bytes) -> bytes:
         return self.__encrypter.encrypt(data)
 
     def decrypt(self, data: bytes) -> bytes:
-        return self.__decipher.decrypt(data)
+        return self.__decrypter.decrypt(data)
 
     @property
     def encrypt_key(self) -> bytes:

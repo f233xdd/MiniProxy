@@ -6,19 +6,19 @@ from server import *
 
 
 def start_server():
-    print("Initialize ServerPort.", end='... ')
+    print("[INFO] Initialize ServerPort.", end='... ')
     server_1 = Server(local_ip, local_ports[0], log)
     server_2 = Server(local_ip, local_ports[1], log)
     print("Done!")
 
-    print("Create threads.", end='... ')
+    print("[INFO] Create processes.", end='... ')
     process_1 = multiprocessing.Process(target=server_1.start, args=(server_1.data_queue,))
     process_2 = multiprocessing.Process(target=server_2.start, args=(server_2.data_queue,))
     print("Done!")
 
     process_1.start()
     process_2.start()
-    print("Server is running!\n")
+    print("[INFO] Server is running!\n")
 
     return [process_1, process_2]
 

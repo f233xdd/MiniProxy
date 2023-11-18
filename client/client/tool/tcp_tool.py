@@ -4,13 +4,12 @@ import typing
 
 class BinaryBuffer:
 
-    def __init__(self, static: bool = False, size: int | None = None):
+    def __init__(self, size: int | None = None, static: bool = False):
         self._static: bool = static
 
         if size is None:
             if self._static:
                 raise ValueError("static buffer has no size")
-
             else:
                 self._size: int | None = size
 
@@ -31,11 +30,11 @@ class BinaryBuffer:
             elif self.is_empty and size > 0:
                 self._size = size
             else:
-                raise ValueError(f"unexpected size: {size}")
+                raise RuntimeError(f"cannot set size when buffer is not empty.")
         else:
             raise ValueError("static buffer changed its size")
 
-    def put(self, data: bytes, errors: typing.Literal["strict", "return", "ignore"] = "return") -> bytes | None:
+    def put(self, data: bytes) -> bytes | None:
         """put data in the buffer and mark its length"""
         self._data_len += len(data)
 
@@ -43,21 +42,12 @@ class BinaryBuffer:
             self._data_queue.append(data)
 
         else:
-            if errors == "strict":
-                msg = f"data length: {self._data_len} is over buffer max length: {self._size}"
-                raise OverflowError(msg)
+            over = self._data_len - self._size
 
-            elif errors == "return" or errors == "ignore":
-                over = self._data_len - self._size
+            self._data_queue.append(data[:-over])
+            self._data_len = self._size
 
-                self._data_queue.append(data[:-over])
-                self._data_len = self._size
-
-                if errors == "return":
-                    return data[-over:]
-
-            else:
-                raise ValueError(f"unexpected errors: {errors}")
+            return data[-over:]
 
     def get(self, reset_size=False) -> bytes | None:
         """return data in the buffer if it's full"""
@@ -99,10 +89,11 @@ class BinaryBuffer:
 
     def __repr__(self):
         """return buffer data for debug"""
-        return str(b"".join(self._data_queue))
+        return f"<BinaryBuffer object: {b''.join(self._data_queue)}>"
 
 
 class TCPDataPacker:
+    """pack data with length in its front"""
 
     def __init__(self, sort_len: int | None = None):
         self.__len = sort_len
@@ -113,7 +104,8 @@ class TCPDataPacker:
 
     def put(self, data: bytes):
         if data:
-            data = b"".join([struct.pack('i', len(data)), data])
+            # pack with the mode of unsigned int
+            data = b"".join([struct.pack('I', len(data)), data])
 
             if self.__len:
                 while data:
@@ -127,14 +119,16 @@ class TCPDataPacker:
 
     @property
     def packages(self) -> typing.Iterator[bytes]:
+        """return packed packages"""
         while self.__packages:
             yield self.__packages.pop(0)
 
     def __repr__(self):
-        return str(self.__packages)
+        return f"<TCPDataPacker object: {str(self.__packages)}>"
 
 
 class TCPDataAnalyser:
+    """unpack data with length in its front"""
 
     def __init__(self):
         self.__packages = []
@@ -149,11 +143,10 @@ class TCPDataAnalyser:
                 header = self.__header_buf.get()
 
                 if header:
-                    size = struct.unpack('i', header)[0]
+                    # unpack with the mode of unsigned int
+                    size = struct.unpack('I', header)[0]
                     # print(f"Set {size}")
                     self.__data_buf.set_size(size)
-                else:
-                    continue
 
             elif self.__data_buf.is_full:
                 sorted_data = self.__data_buf.get(reset_size=True)
@@ -166,12 +159,15 @@ class TCPDataAnalyser:
         else:
             sorted_data = self.__data_buf.get(reset_size=True)
             if sorted_data:
+                # print(f"Put {len(sorted_data)})")
                 self.__packages.append(sorted_data)
 
     @property
     def packages(self) -> typing.Iterator[bytes]:
+        """return unpacked packages"""
         while self.__packages:
             yield self.__packages.pop(0)
 
     def __repr__(self):
-        return str(self.__packages)
+        return f"<TCPDataAnalyser object: {str(self.__packages)}>"
+

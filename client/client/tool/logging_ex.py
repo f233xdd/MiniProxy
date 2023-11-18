@@ -8,6 +8,7 @@ def get_logger(name, log_file: str = "", stream=sys.stdin):
 
     formatter = logging.Formatter(format_msg, format_time)
 
+    # this is for console
     console_handler = logging.StreamHandler(stream)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.INFO)
@@ -17,6 +18,7 @@ def get_logger(name, log_file: str = "", stream=sys.stdin):
     log.addHandler(console_handler)
 
     if log_file:
+        # this is for log file
         _file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
         _file_handler.setFormatter(formatter)
         _file_handler.setLevel(logging.DEBUG)

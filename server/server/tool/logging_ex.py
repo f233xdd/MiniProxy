@@ -10,7 +10,7 @@ def get_logger(name, log_file: str = ''):
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.DEBUG)
+    console_handler.setLevel(logging.INFO)
 
     log = logging.getLogger(name)
     log.setLevel(logging.DEBUG)

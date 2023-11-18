@@ -48,7 +48,9 @@ class Server(object):
 
             self.log.info(f"Accept client. Address: {addr}", extra=self._extra)
             try:
-                client.send(f"Welcome to the server!\nYour address: {addr}\n".encode('utf_8'))
+                client.send(
+                    f"[THIS IS A TEST MESSAGE]\nWelcome to the proxy server!\nYour internet address: {addr}\n".encode(
+                        'utf_8'))
                 break
 
             except ConnectionResetError:
@@ -56,7 +58,6 @@ class Server(object):
 
         self._client = client
         self.client_addr = addr
-        self.log.debug("Gets client", extra=self._extra)
 
     def __get_data(self):
         """get data from the client and post it into the double queue"""
@@ -127,7 +128,7 @@ class Server(object):
             self.__link_to_client()
 
             threads = [threading.Thread(target=func) for func in [self.__get_data, self.__send_data]]
-            self.log.info("Threads start", extra=self._extra)
+            self.log.info("Service threads start", extra=self._extra)
 
             for thd in threads:
                 thd.start()
@@ -135,4 +136,4 @@ class Server(object):
             for thd in threads:
                 thd.join()
 
-            self.log.info("Threads are down", extra=self._extra)
+            self.log.info("Service threads terminate", extra=self._extra)
