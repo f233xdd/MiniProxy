@@ -41,8 +41,6 @@ class MainWindow(tk.Tk):
         self.__notebook.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
-        scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
-        self.call('tk', 'scaling', scale_factor / 150)
 
 
 if __name__ == "__main__":
