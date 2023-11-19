@@ -26,13 +26,13 @@ class MainWindow(tk.Tk):
             HOST: MessagePipe(),
             GUEST: MessagePipe(),
         }
-
         self.__frame = {
             HOST: ClientFrame(self.__task_manager, h_start, HOST, conf,
                               self.__msg_pipe[HOST], borderwidth=0),
             GUEST: ClientFrame(self.__task_manager, v_start, GUEST, conf,
                                self.__msg_pipe[GUEST], borderwidth=0),
-            OPTION: OptionFrame(self.__task_manager, conf, crypt_available, self.__msg_pipe, borderwidth=1),
+            OPTION: OptionFrame(self.__task_manager, conf, crypt_available,
+                                self.__msg_pipe, borderwidth=1),
         }
 
         self.__notebook.add(self.__frame[HOST], text=HOST)
