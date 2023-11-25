@@ -24,7 +24,7 @@ class GuestClient(client.Client):
 
         ip = socket.gethostbyname(socket.gethostname())
         addr = (ip, self._port)
-        self.log.info(f"{ip}:{self._port}\n")
+        self.log.info(f"{ip}:{self._port}")
 
         self._virtual_server.bind(addr)
         self._virtual_server.listen(1)

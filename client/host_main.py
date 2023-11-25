@@ -67,6 +67,7 @@ def start(server_addr: tuple[str, int] | None = None,
 
                 break
         if killed:
+            log.info("exit successfully")
             break
 
 
