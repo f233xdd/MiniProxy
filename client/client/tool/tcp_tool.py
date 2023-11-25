@@ -4,7 +4,7 @@ import typing
 
 class BinaryBuffer:
 
-    def __init__(self, size: int | None = None, static: bool = False):
+    def __init__(self, size: int | None = None, static: bool = False, log=None):
         self._static: bool = static
 
         if size is None:
@@ -21,6 +21,8 @@ class BinaryBuffer:
 
         self._data_queue: list[bytes] = []
         self._data_len: int = 0
+
+        self.log = log  # TODO:log what?
 
     def set_size(self, size: int | None) -> None:
         """set the size of the buffer if it is empty"""
@@ -95,12 +97,14 @@ class BinaryBuffer:
 class TCPDataPacker:
     """pack data with length in its front"""
 
-    def __init__(self, sort_len: int | None = None):
+    def __init__(self, sort_len: int | None = None, log=None):
         self.__len = sort_len
 
         self.__packages = []
         if sort_len:
             self.__data_buf = BinaryBuffer(static=True, size=self.__len)
+
+        self.log = log
 
     def put(self, data: bytes):
         if data:
@@ -114,8 +118,11 @@ class TCPDataPacker:
 
                     if sorted_data:
                         self.__packages.append(sorted_data)
+                        self.log.debug(f"pack data [{len(sorted_data)}]")
+
             else:
                 self.__packages.append(data)
+                self.log.debug(f"pack data [{len(data)}]")
 
     @property
     def packages(self) -> typing.Iterator[bytes]:
@@ -130,11 +137,13 @@ class TCPDataPacker:
 class TCPDataAnalyser:
     """unpack data with length in its front"""
 
-    def __init__(self):
+    def __init__(self, log=None):
         self.__packages = []
 
         self.__data_buf = BinaryBuffer()
         self.__header_buf = BinaryBuffer(static=True, size=4)
+
+        self.log = log
 
     def put(self, data: bytes):
         while data:
@@ -145,13 +154,13 @@ class TCPDataAnalyser:
                 if header:
                     # unpack with the mode of unsigned int
                     size = struct.unpack('I', header)[0]
-                    # print(f"Set {size}")
                     self.__data_buf.set_size(size)
+                    self.log.debug(f"set size [{size}]")
 
             elif self.__data_buf.is_full:
                 sorted_data = self.__data_buf.get(reset_size=True)
-                # print(f"Put {len(sorted_data)})")
                 self.__packages.append(sorted_data)
+                self.log.debug(f"analyse data [{len(sorted_data)}]")
 
             else:
                 data = self.__data_buf.put(data)
@@ -159,8 +168,8 @@ class TCPDataAnalyser:
         else:
             sorted_data = self.__data_buf.get(reset_size=True)
             if sorted_data:
-                # print(f"Put {len(sorted_data)})")
                 self.__packages.append(sorted_data)
+                self.log.debug(f"analyse data [{len(sorted_data)}]")
 
     @property
     def packages(self) -> typing.Iterator[bytes]:
@@ -170,4 +179,3 @@ class TCPDataAnalyser:
 
     def __repr__(self):
         return f"<TCPDataAnalyser object: {str(self.__packages)}>"
-

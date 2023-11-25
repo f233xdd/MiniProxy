@@ -13,7 +13,7 @@ class HostClient(client.Client):
         super().__init__(server_addr, is_crypt, logger)
 
         self.local_port = local_port
-        self.__virtual_client: socket.socket
+        self.__virtual_client: socket.socket | None = None
 
     def __connect_local(self):
         """connect with local as a guest"""
@@ -31,12 +31,17 @@ class HostClient(client.Client):
         try:
             while True:
                 try:
-                    data = self._queue_to_local.get(timeout=2)
+                    data = self._queue_to_local.get(timeout=1)
 
                 except queue.Empty:
                     continue
 
-                self.__virtual_client.sendall(data)
+                while True:
+                    try:
+                        self.__virtual_client.sendall(data)
+                        break
+                    except TimeoutError:
+                        pass
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
@@ -49,7 +54,10 @@ class HostClient(client.Client):
         """get data from local"""
         try:
             while True:
-                data = self.__virtual_client.recv(client.MAX_LENGTH)
+                try:
+                    data = self.__virtual_client.recv(client.MAX_LENGTH)
+                except TimeoutError:
+                    continue
 
                 self._queue_to_server.put(data)
 
@@ -60,22 +68,18 @@ class HostClient(client.Client):
         except ConnectionError as error:
             self.log.error(f"{error}")
 
-    def local_client_main(self):
+    def local_client_main(self, daemon) -> list[threading.Thread]:
         functions = [self.__send_local_data, self.__get_local_data]
 
-        while True:
-            try:
-                self.__connect_local()
-            except ConnectionRefusedError:
-                sys.exit(-1)
+        try:
+            self.__connect_local()
+        except ConnectionRefusedError:
+            sys.exit(-1)
 
-            threads = [threading.Thread(target=func, daemon=True) for func in functions]
+        self.__virtual_client.settimeout(10)
+        threads = [threading.Thread(target=func, daemon=daemon) for func in functions]
 
-            for thd in threads:
-                thd.start()
+        for thd in threads:
+            thd.start()
 
-            for thd in threads:
-                thd.join()
-
-            self.log.info("connection interrupted")
-            self.log.info("reconnecting")
+        return threads

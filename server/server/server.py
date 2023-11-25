@@ -10,8 +10,8 @@ from .tool import DoubleQueue, message
 log_length: bool | None = None
 log_content: bool | None = None
 
+
 # main content
-MAX_LENGTH: int | None = None
 
 
 class ClientOffLineError(Exception):
@@ -21,8 +21,10 @@ class ClientOffLineError(Exception):
 class Server(object):
     data_queue = DoubleQueue()
 
-    def __init__(self, ip: str, port: int, logger):
-        self.log: logging.Logger = logger
+    def __init__(self, ip: str, port: int, max_length: int, log=None):
+        self.MAX_LENGTH: int = max_length
+
+        self.log: logging.Logger = log
 
         self._extra = {'port': f"{port}"}
         self._port = port  # work as a port and a queue flag
@@ -45,7 +47,6 @@ class Server(object):
         while True:
             client, addr = self._server_port.accept()
             addr = f"{addr[0]}:{addr[1]}"
-
             self.log.info(f"Accept client. Address: {addr}", extra=self._extra)
             try:
                 client.send(
@@ -66,7 +67,7 @@ class Server(object):
 
         try:
             while True:
-                data = self._client.recv(MAX_LENGTH)
+                data = self._client.recv(self.MAX_LENGTH)
 
                 msg = message(data, log_content, log_length)
                 if msg:
@@ -120,10 +121,7 @@ class Server(object):
 
             self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
 
-    def start(self, deque=None):
-        if deque:
-            self.data_queue = deque
-
+    def start(self):
         while True:
             self.__link_to_client()
 

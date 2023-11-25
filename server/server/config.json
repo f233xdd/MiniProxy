@@ -8,7 +8,7 @@
     ]
   },
   "debug": {
-    "file_log": false,
+    "file_log": true,
     "clear_log": true,
     "console": {
       "length": false,

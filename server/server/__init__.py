@@ -14,11 +14,11 @@ config = json.load(json_file)
 
 
 # init execution
-def get_attrs() -> tuple[str, list[int, int]]:
-    server.MAX_LENGTH = config["data_max_length"]
+def get_attrs() -> tuple[str, list[int, int], int]:
+    MAX_LENGTH = config["data_max_length"]
     local_ip = config["local_address"]["private_ip"]
     local_ports = config["local_address"]["ports"]
-    return local_ip, local_ports
+    return local_ip, local_ports, MAX_LENGTH
 
 
 # init log

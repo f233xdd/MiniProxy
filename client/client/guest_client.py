@@ -39,7 +39,7 @@ class GuestClient(client.Client):
         try:
             while True:
                 try:
-                    data = self._queue_to_local.get(timeout=2)
+                    data = self._queue_to_local.get(timeout=1)
 
                 except queue.Empty:
                     continue
