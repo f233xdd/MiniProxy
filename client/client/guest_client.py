@@ -11,9 +11,9 @@ class GuestClient(client.Client):
     def __init__(self, server_addr: tuple[str, int], virtual_server_port: int, is_crypt: bool, log):
         super().__init__(server_addr, is_crypt, log)
 
-        self._port = virtual_server_port
-        self._virtual_server: socket.socket
-        self._local_client: socket.socket
+        self._port: int = virtual_server_port
+        self._virtual_server: socket.socket | None = None
+        self._local_client: socket.socket | None = None
 
         self.__init_local_server()
 
@@ -52,12 +52,17 @@ class GuestClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
+        except SystemExit:
+            self.log.debug("exit")
 
     def __get_local_data(self):
         """get data from local"""
         try:
             while True:
-                data = self._local_client.recv(client.MAX_LENGTH)
+                try:
+                    data = self._local_client.recv(client.MAX_LENGTH)
+                except TimeoutError:
+                    continue
 
                 self._queue_to_server.put(data)
 
@@ -67,20 +72,20 @@ class GuestClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
+        except SystemExit:
+            self._local_client.shutdown(socket.SHUT_RDWR)
+            self._local_client.close()
+            self.log.debug("exit and close socket")
 
-    def local_server_main(self):
+    def local_server_main(self, daemon=False) -> list[threading.Thread]:
         functions = [self.__send_local_data, self.__get_local_data]
 
-        while True:
-            self.__connect_local()
+        self.__connect_local()
 
-            threads = [threading.Thread(target=func) for func in functions]
+        self._local_client.settimeout(3)
+        threads = [threading.Thread(target=func, daemon=daemon) for func in functions]
 
-            for thd in threads:
-                thd.start()
+        for thd in threads:
+            thd.start()
 
-            for thd in threads:
-                thd.join()
-
-            self.log.info("connection interrupted")
-            self.log.info("reconnecting")
+        return threads  # FIXME: stuck here

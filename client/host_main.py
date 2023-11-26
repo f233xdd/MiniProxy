@@ -1,8 +1,7 @@
 # run this file to start your host client
-import ctypes
-import sys
-import threading
 import time
+import ctypes
+import threading
 
 import client
 
@@ -43,32 +42,30 @@ def start(server_addr: tuple[str, int] | None = None,
         thread.start()
 
     threads.extend(host.local_client_main(daemon=daemon))
+    print(threads)
 
     killed = False
     while True:
         for _thd in threads:
             if not _thd.is_alive():
-                print("Not Alive")
-                for thd in threads:
+                for thd in threads:  # interrupt threads
                     ctypes.pythonapi.PyThreadState_SetAsyncExc(thd.native_id, ctypes.py_object(SystemExit))
 
-                while True:
-                    time.sleep(3)
-                    i = True
+                while True:  # check threads
+                    time.sleep(1)
+                    all_not_alive = True
                     for thd in threads:
                         if thd.is_alive():
-                            i = False
-                    if i:
+                            all_not_alive = False
+                    if all_not_alive:
                         killed = True
                         break
-
-                for thd in threads:
-                    print(f"{thd.is_alive()} | {thd}")
 
                 break
         if killed:
             log.info("exit successfully")
             break
+        time.sleep(1)
 
 
 def main(
@@ -77,7 +74,6 @@ def main(
         public=None):
     try:
         start(server_addr, open_port, public)
-        sys.exit(0)
     except KeyboardInterrupt:
         print("Canceled by [Ctrl-C]")
 

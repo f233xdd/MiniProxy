@@ -24,11 +24,14 @@ class AdvancedSocket(socket.socket):
         self.__tcp_data_analyser = tool.TCPDataAnalyser(log=self.log)
         self.__tcp_data_packer = tool.TCPDataPacker(log=self.log)
 
-    def recv_all(self) -> typing.Iterator[bytes]:
+    def recv_all(self, max_length=None) -> typing.Iterator[bytes]:
         self.settimeout(5)
         while True:
             try:
-                data = self.recv(MAX_LENGTH)
+                if max_length:
+                    data = self.recv(max_length)
+                else:
+                    data = self.recv(MAX_LENGTH)
                 break
             except ConnectionError as e:
                 self.log.error(e)
@@ -78,17 +81,15 @@ class Client(object):
         self._queue_to_server = queue.Queue()  # for data from local to server
         self._queue_to_local = queue.Queue()  # for data from server to local
 
-        self.__rsa: tool.RSA | None
-        self.__cipher: tool.Cipher | None
+        # for crypt
+        self.__rsa: tool.RSA | None = None
+        self.__cipher: tool.Cipher | None = None
+        self.__got_public_key: threading.Event | None = None
 
         if self.__is_crypt:
             self.__rsa = tool.RSA()
             self.__cipher = tool.Cipher()
             self.__got_public_key = threading.Event()
-
-        else:
-            self.__rsa = None
-            self.__cipher = None
 
         self.__create_socket()
 
@@ -109,49 +110,58 @@ class Client(object):
     def __get_key(self):
         pem = next(self.__server.recv_all())
         self.__rsa.load_key(pem)
-        self.log.info("load public key")
+        self.log.debug("load public key")
         self.__got_public_key.set()
 
         d = next(self.__server.recv_all())
         key = self.__rsa.decrypt(d)
         self.__cipher.load_key(key)
-        self.log.info("load cipher")
+        self.log.debug("load cipher")
+        self.log.info("Ready to decrypt")
 
     def __send_key(self):
         pem = self.__rsa.get_public_key()
         self.__server.send_all(pem)
-        self.log.info("send public key")
+        self.log.debug("send public key")
 
         self.__got_public_key.wait()
         key = self.__rsa.encrypt(self.__cipher.encrypt_key)
         self.__server.send_all(key)
-        self.log.info("send cipher")
+        self.log.debug("send cipher")
 
     def get_server_data(self):
         """get data from server"""
-        if self.__is_crypt:
-            self.__get_key()
+        try:
+            if self.__is_crypt:
+                self.__get_key()
 
-        while True:
-            for data in self.__server.recv_all():
-                if self.__cipher:
-                    data = self.__cipher.decrypt(data)
+            while True:
+                for data in self.__server.recv_all():
+                    if self.__cipher:
+                        data = self.__cipher.decrypt(data)
 
-                self._queue_to_local.put(data)
+                    self._queue_to_local.put(data)
+        except SystemExit:
+            self.__server.shutdown(socket.SHUT_RDWR)
+            self.__server.close()
+            self.log.debug("exit and close socket")
 
     def send_server_data(self):
         """send data to server"""
-        if self.__is_crypt:
-            self.__send_key()
+        try:
+            if self.__is_crypt:
+                self.__send_key()
 
-        while True:
-            try:
-                data = self._queue_to_server.get(timeout=1)
-            except queue.Empty:
-                continue
+            while True:
+                try:
+                    data = self._queue_to_server.get(timeout=1)
+                except queue.Empty:
+                    continue
 
-            if data:
-                if self.__cipher:
-                    data = self.__cipher.encrypt(data)
+                if data:
+                    if self.__cipher:
+                        data = self.__cipher.encrypt(data)
 
-                self.__server.send_all(data)
+                    self.__server.send_all(data)
+        except SystemExit:
+            self.log.debug("exit")

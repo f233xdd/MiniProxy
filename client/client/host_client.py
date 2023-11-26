@@ -15,6 +15,8 @@ class HostClient(client.Client):
         self.local_port = local_port
         self.__virtual_client: socket.socket | None = None
 
+        self.__get_func_alive: bool = True
+
     def __connect_local(self):
         """connect with local as a guest"""
         self.__virtual_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -49,6 +51,8 @@ class HostClient(client.Client):
 
         except ConnectionError as error:
             self.log.error(f"{error}")
+        except SystemExit:
+            self.log.debug("exit")
 
     def __get_local_data(self):
         """get data from local"""
@@ -59,16 +63,25 @@ class HostClient(client.Client):
                 except TimeoutError:
                     continue
 
-                self._queue_to_server.put(data)
+                if data:
+                    self._queue_to_server.put(data)
+                else:
+                    raise ConnectionError
 
                 msg = tool.message(data, client.log_content, client.log_length)
                 if msg:
                     self.log.debug(msg)
 
         except ConnectionError as error:
+            self.__get_func_alive = False
             self.log.error(f"{error}")
+        except SystemExit:
+            self.__get_func_alive = False
+            self.__virtual_client.shutdown(socket.SHUT_RDWR)
+            self.__virtual_client.close()
+            self.log.debug("exit and close socket")
 
-    def local_client_main(self, daemon) -> list[threading.Thread]:
+    def local_client_main(self, daemon=False) -> list[threading.Thread]:
         functions = [self.__send_local_data, self.__get_local_data]
 
         try:
@@ -76,7 +89,7 @@ class HostClient(client.Client):
         except ConnectionRefusedError:
             sys.exit(-1)
 
-        self.__virtual_client.settimeout(10)
+        self.__virtual_client.settimeout(3)
         threads = [threading.Thread(target=func, daemon=daemon) for func in functions]
 
         for thd in threads:

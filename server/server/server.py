@@ -22,32 +22,31 @@ class Server(object):
     data_queue = DoubleQueue()
 
     def __init__(self, ip: str, port: int, max_length: int, log=None):
-        self.MAX_LENGTH: int = max_length
-
-        self.log: logging.Logger = log
-
-        self._extra = {'port': f"{port}"}
-        self._port = port  # work as a port and a queue flag
+        self.__extra = {'port': f"{port}"}
+        self.__port = port  # work as a port and a queue flag
+        self.max_length: int = max_length
 
         self.data_queue.add_flag(port)
 
-        self._get_data_alive = None
+        self.__get_data_alive = None  # provide for send function
 
-        self._client: socket.socket | None = None
+        self.__client: socket.socket | None = None
         self.client_addr: str | None = None
 
+        self.log: logging.Logger = log
+
         # initialize server socket
-        self._server_port = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._server_port.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._server_port.bind((ip, port))
-        self._server_port.listen(1)
+        self.__server_port = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__server_port.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__server_port.bind((ip, port))
+        self.__server_port.listen(1)
 
     def __link_to_client(self):
         """connect to the client"""
         while True:
-            client, addr = self._server_port.accept()
+            client, addr = self.__server_port.accept()
             addr = f"{addr[0]}:{addr[1]}"
-            self.log.info(f"Accept client. Address: {addr}", extra=self._extra)
+            self.log.info(f"Accept client. Address: {addr}", extra=self.__extra)
             try:
                 client.send(
                     f"[THIS IS A TEST MESSAGE]\nWelcome to the proxy server!\nYour internet address: {addr}\n".encode(
@@ -55,26 +54,28 @@ class Server(object):
                 break
 
             except ConnectionResetError:
-                self.log.warning("[ConnectionResetError] Connection break.", extra=self._extra)
+                self.log.warning("[ConnectionResetError] Connection break.", extra=self.__extra)
 
-        self._client = client
+        self.__client = client
         self.client_addr = addr
 
     def __get_data(self):
         """get data from the client and post it into the double queue"""
-        self._get_data_alive = True
-        self.log.info("Get function start.", extra=self._extra)
+        self.__get_data_alive = True
+        self.log.info("Get function start.", extra=self.__extra)
 
         try:
             while True:
-                data = self._client.recv(self.MAX_LENGTH)
+                data = self.__client.recv(self.max_length)
 
                 msg = message(data, log_content, log_length)
                 if msg:
-                    self.log.debug(msg, extra=self._extra)
+                    self.log.debug(msg, extra=self.__extra)
 
                 if data:
-                    self.data_queue.put(data, self._port, exchange=True)
+                    self.data_queue.put(data, self.__port, exchange=True)
+                else:
+                    raise ConnectionError
 
         except ConnectionError as e:
             if e is ConnectionResetError:
@@ -84,32 +85,32 @@ class Server(object):
             else:
                 e = "[ConnectionRefusedError]"
 
-            self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
-            self._get_data_alive = False
+            self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self.__extra)
+            self.__get_data_alive = False
 
     def __send_data(self):
         """get data from the double queue and send it to the client"""
-        self.log.info("Send function start.", extra=self._extra)
+        self.log.info("Send function start.", extra=self.__extra)
 
         try:
             while True:
                 try:
-                    data = self.data_queue.get(self._port, timeout=2)
+                    data = self.data_queue.get(self.__port, timeout=2)
                 except queue.Empty:
-                    if self._get_data_alive is False:
-                        self.log.warning("[TimeoutError] func is down", extra=self._extra)
+                    if self.__get_data_alive is False:
+                        self.log.warning("[TimeoutError] func is down", extra=self.__extra)
                         break
                     else:
                         continue
 
-                self._client.sendall(data)
+                self.__client.sendall(data)
 
                 msg = message(data, log_content, log_length)
                 if msg:
-                    self.log.debug(msg, extra=self._extra)
+                    self.log.debug(msg, extra=self.__extra)
 
         except BrokenPipeError:
-            self.log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self._extra)
+            self.log.warning(f"[BrokenPipeError] Cancelled ip:{self.client_addr}.", extra=self.__extra)
 
         except ConnectionError as e:
             if e is ConnectionResetError:
@@ -119,14 +120,14 @@ class Server(object):
             else:
                 e = "[ConnectionRefusedError]"
 
-            self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self._extra)
+            self.log.warning(f"[{e}] Cancelled ip:{self.client_addr}.", extra=self.__extra)
 
     def start(self):
         while True:
             self.__link_to_client()
 
             threads = [threading.Thread(target=func) for func in [self.__get_data, self.__send_data]]
-            self.log.info("Service threads start", extra=self._extra)
+            self.log.info("Service threads start", extra=self.__extra)
 
             for thd in threads:
                 thd.start()
@@ -134,4 +135,4 @@ class Server(object):
             for thd in threads:
                 thd.join()
 
-            self.log.info("Service threads terminate", extra=self._extra)
+            self.log.info("Service threads terminate", extra=self.__extra)
